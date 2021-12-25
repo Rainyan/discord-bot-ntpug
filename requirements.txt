@@ -1,0 +1,19 @@
+aiodns==3.0.0
+aiohttp==3.7.4.post0
+async-timeout==3.0.1
+attrs==21.2.0
+Brotli==1.0.9
+cchardet==2.1.7
+cffi==1.15.0
+chardet==4.0.0
+idna==3.3
+multidict==5.2.0
+orjson==3.6.5
+py-cord @ git+https://github.com/pycord-development/pycord.git@f5c3e600158d804f9786d480182e495b4d53c8e7
+pycares==4.1.2
+pycparser==2.21
+python-dateutil==2.8.2
+six==1.16.0
+strictyaml==1.6.1
+typing_extensions==4.0.1
+yarl==1.7.2
