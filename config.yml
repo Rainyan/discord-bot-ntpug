@@ -1,4 +1,6 @@
 # Bot secret token goes here. Don't share this value with others.
+# Alternatively, you can set the OS environment variable DISCORD_BOT_TOKEN,
+# which will take precedence over this config value.
 bot_secret_token: ""
 
 # The first character of commands, for example "!" for "!pug"
@@ -8,10 +10,10 @@ command_prefix: "!"
 pug_channel_name: "pug-queue"
 
 # Number of players, total, that are required for a PUG match.
-num_players_required_total: 10
+num_players_required_total: 2
 
 # Debug command. Allows the same player to repeatedly queue to fill up >1 slots.
-debug_allow_requeue: False
+debug_allow_requeue: True
 
 # How often (in seconds) to check if there's enough players pugged up to start
 # playing.
