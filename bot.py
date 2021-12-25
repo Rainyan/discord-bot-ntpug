@@ -186,7 +186,7 @@ async def puggers(ctx):
     if ctx.guild not in pug_guilds or not ctx.channel.name == PUG_CHANNEL_NAME:
         return
 
-    msg = (f"{pug_guilds[ctx.guild].num_queued()}/"
+    msg = (f"{pug_guilds[ctx.guild].num_queued()} / "
            f"{pug_guilds[ctx.guild].num_expected()} player(s) currently "
            "queued")
     if pug_guilds[ctx.guild].num_queued() > 0:
