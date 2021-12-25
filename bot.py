@@ -45,11 +45,11 @@ class PugStatus():
         self.nsf_players = []
         self.prev_puggers = []
         self.players_required_total = players_required
-        self.players_per_team = self.players_required_total / 2
+        self.players_per_team = int(self.players_required_total / 2)
         self.prev_puggers = []
 
     def reset(self):
-        self.prev_puggers = [self.jin_players + self.nsf_players]
+        self.prev_puggers = self.jin_players + self.nsf_players
         self.jin_players = []
         self.nsf_players = []
 
@@ -57,8 +57,8 @@ class PugStatus():
         if not DEBUG_ALLOW_REQUEUE and \
                 (player in self.jin_players or player in self.nsf_players):
             return False, (f"{player.mention} You are already queued! "
-                           "If you wanted to un-PUG, please use **!unpug** "
-                           "instead.")
+                           "If you wanted to un-PUG, please use **"
+                           f"{CFG['command_prefix'].value}unpug** instead.")
         if team is None:
             team = random.randint(0, 1)
         if team == 0:
@@ -80,8 +80,8 @@ class PugStatus():
         if left_queue:
             return True, ""
         else:
-            return False, (f"{player.mention} You are already not in the PUG "
-                           "queue")
+            return False, (f"{player.mention} You are not currently in the "
+                           "PUG queue")
 
     def num_queued(self):
         return len(self.jin_players) + len(self.nsf_players)
@@ -105,7 +105,9 @@ class PugStatus():
         msg += "\n_NSF players:_\n"
         for player in self.nsf_players:
             msg += f"{player.mention}, "
-        msg = msg[:-1]  # trailing ", "
+        msg = msg[:-2]  # trailing ", "
+        msg += (f"\n\nTeams unbalanced? Use **{CFG['command_prefix'].value}"
+                "scramble** to suggest new random teams.")
 
         return True, msg
 
@@ -153,6 +155,29 @@ async def resetqueue(ctx):
     await ctx.send(f"{ctx.message.author.name} has reset the PUG queue")
 
 
+@bot.command(brief="Get new random teams suggestion for the latest PUG")
+async def scramble(ctx):
+    msg = ""
+    if len(pug_guilds[ctx.guild].prev_puggers) == 0:
+        msg = f"{ctx.message.author.mention} No previous PUG found to scramble"
+    else:
+        random.shuffle(pug_guilds[ctx.guild].prev_puggers)
+        msg = f"{ctx.message.author.name} suggests scrambled teams:\n"
+        msg += f"_(random shuffle id: {random_human_readable_phrase()})_\n"
+        msg += "_Jinrai players:_\n"
+        for i in range(int(len(pug_guilds[ctx.guild].prev_puggers) / 2)):
+            msg += f"{pug_guilds[ctx.guild].prev_puggers[i].name}, "
+        msg = msg[:-2]  # trailing ", "
+        msg += "\n_NSF players:_\n"
+        for i in range(int(len(pug_guilds[ctx.guild].prev_puggers) / 2),
+                       len(pug_guilds[ctx.guild].prev_puggers)):
+            msg += f"{pug_guilds[ctx.guild].prev_puggers[i].name}, "
+        msg = msg[:-2]  # trailing ", "
+        msg += (f"\n\nTeams still unbalanced? Use **{CFG['command_prefix'].value}"
+                "scramble** to suggest new random teams.")
+        await ctx.send(msg)
+
+
 async def poll_if_pug_ready():
     while True:
         for guild in bot.guilds:
@@ -168,6 +193,16 @@ async def poll_if_pug_ready():
                         await channel.send(msg)
                         pug_guilds[guild].reset()
         await asyncio.sleep(CFG["queue_polling_interval_secs"].value)
+
+
+def random_human_readable_phrase():
+    with open("nouns.txt", "r") as f:
+        nouns = f.readlines()
+    with open("adjectives.txt", "r") as f:
+        adjectives = f.readlines()
+    phrase = (f"{adjectives[random.randint(0, len(adjectives))]} "
+              f"{nouns[random.randint(0, len(nouns))]}")
+    return phrase.replace("\n", "").lower()
 
 
 asyncio.Task(poll_if_pug_ready())
