@@ -11,7 +11,7 @@ from discord.ext import commands
 from strictyaml import load, Bool, Int, Map, Seq, Str, YAMLError
 
 SCRIPT_NAME = "NT Pug Bot"
-SCRIPT_VERSION = "0.2.0"
+SCRIPT_VERSION = "0.2.1"
 SCRIPT_URL = "https://github.com/Rainyan/discord-bot-ntpug"
 
 CFG_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)),
