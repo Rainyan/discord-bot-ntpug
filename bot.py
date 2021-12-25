@@ -11,7 +11,7 @@ from discord.ext import commands
 from strictyaml import load, Bool, Int, Map, Seq, Str, YAMLError
 
 SCRIPT_NAME = "NT Pug Bot"
-SCRIPT_VERSION = "0.1.0"
+SCRIPT_VERSION = "0.2.1"
 SCRIPT_URL = "https://github.com/Rainyan/discord-bot-ntpug"
 
 CFG_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)),
@@ -179,6 +179,25 @@ async def scramble(ctx):
                 f"{CFG['command_prefix'].value}"
                 "scramble** to suggest new random teams.")
         await ctx.send(msg)
+
+
+@bot.command(brief="List players currently queueing for PUG")
+async def puggers(ctx):
+    if ctx.guild not in pug_guilds or not ctx.channel.name == PUG_CHANNEL_NAME:
+        return
+
+    msg = (f"{pug_guilds[ctx.guild].num_queued()} / "
+           f"{pug_guilds[ctx.guild].num_expected()} player(s) currently "
+           "queued")
+    if pug_guilds[ctx.guild].num_queued() > 0:
+        msg += ": "
+        for player in pug_guilds[ctx.guild].jin_players:
+            msg += f"{player.name}, "
+            msg = msg[:-2]  # trailing ", "
+        for player in pug_guilds[ctx.guild].nsf_players:
+            msg += f"{player.name}, "
+            msg = msg[:-2]  # trailing ", "
+    await ctx.send(msg)
 
 
 async def poll_if_pug_ready():
