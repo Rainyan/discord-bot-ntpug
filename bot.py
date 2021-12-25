@@ -34,6 +34,8 @@ NUM_PLAYERS_REQUIRED = CFG["num_players_required_total"].value
 assert NUM_PLAYERS_REQUIRED % 2 == 0, "Need even number of players"
 DEBUG_ALLOW_REQUEUE = CFG["debug_allow_requeue"].value
 PUG_CHANNEL_NAME = CFG["pug_channel_name"].value
+BOT_SECRET_TOKEN = os.environ.get("DISCORD_BOT_TOKEN") or \
+    CFG["bot_secret_token"].value
 
 print(f"Now running {SCRIPT_NAME} v.{SCRIPT_VERSION} -- {SCRIPT_URL}",
       flush=True)
@@ -173,7 +175,8 @@ async def scramble(ctx):
                        len(pug_guilds[ctx.guild].prev_puggers)):
             msg += f"{pug_guilds[ctx.guild].prev_puggers[i].name}, "
         msg = msg[:-2]  # trailing ", "
-        msg += (f"\n\nTeams still unbalanced? Use **{CFG['command_prefix'].value}"
+        msg += ("\n\nTeams still unbalanced? Use **"
+                f"{CFG['command_prefix'].value}"
                 "scramble** to suggest new random teams.")
         await ctx.send(msg)
 
@@ -206,6 +209,6 @@ def random_human_readable_phrase():
 
 
 asyncio.Task(poll_if_pug_ready())
-asyncio.Task(bot.run(CFG["bot_secret_token"].value))
+asyncio.Task(bot.run(BOT_SECRET_TOKEN))
 while True:
     continue
