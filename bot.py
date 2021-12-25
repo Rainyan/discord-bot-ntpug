@@ -190,6 +190,7 @@ async def puggers(ctx):
            f"{pug_guilds[ctx.guild].num_expected()} player(s) currently "
            "queued")
     if pug_guilds[ctx.guild].num_queued() > 0:
+        msg += ": "
         for player in pug_guilds[ctx.guild].jin_players:
             msg += f"{player.name}, "
             msg = msg[:-2]  # trailing ", "
