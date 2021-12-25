@@ -150,7 +150,7 @@ async def unpug(ctx):
 
 
 @bot.command(brief="Empty the server's PUG queue")
-async def resetqueue(ctx):
+async def clearpuggers(ctx):
     if ctx.guild not in pug_guilds or not ctx.channel.name == PUG_CHANNEL_NAME:
         return
     pug_guilds[ctx.guild].reset()
