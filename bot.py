@@ -186,13 +186,16 @@ async def puggers(ctx):
     if ctx.guild not in pug_guilds or not ctx.channel.name == PUG_CHANNEL_NAME:
         return
 
-    msg = f"{pug_guilds[ctx.guild].num_queued()} currently queued: "
-    for player in pug_guilds[ctx.guild].jin_players:
-        msg += f"{player.name}, "
-        msg = msg[:-2]  # trailing ", "
-    for player in pug_guilds[ctx.guild].nsf_players:
-        msg += f"{player.name}, "
-        msg = msg[:-2]  # trailing ", "
+    msg = (f"{pug_guilds[ctx.guild].num_queued()}/"
+           f"{pug_guilds[ctx.guild].num_expected()} player(s) currently "
+           "queued")
+    if pug_guilds[ctx.guild].num_queued() > 0:
+        for player in pug_guilds[ctx.guild].jin_players:
+            msg += f"{player.name}, "
+            msg = msg[:-2]  # trailing ", "
+        for player in pug_guilds[ctx.guild].nsf_players:
+            msg += f"{player.name}, "
+            msg = msg[:-2]  # trailing ", "
     await ctx.send(msg)
 
 
