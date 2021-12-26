@@ -11,7 +11,7 @@ from discord.ext import commands
 from strictyaml import load, Bool, Int, Map, Seq, Str, YAMLError
 
 SCRIPT_NAME = "NT Pug Bot"
-SCRIPT_VERSION = "0.2.1"
+SCRIPT_VERSION = "0.2.2"
 SCRIPT_URL = "https://github.com/Rainyan/discord-bot-ntpug"
 
 CFG_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)),
@@ -48,7 +48,6 @@ class PugStatus():
         self.prev_puggers = []
         self.players_required_total = players_required
         self.players_per_team = int(self.players_required_total / 2)
-        self.prev_puggers = []
 
     def reset(self):
         self.prev_puggers = self.jin_players + self.nsf_players
@@ -62,14 +61,15 @@ class PugStatus():
                            "If you wanted to un-PUG, please use **"
                            f"{CFG['command_prefix'].value}unpug** instead.")
         if team is None:
-            team = random.randint(0, 1)
+            team = random.randint(0, 1)  # flip a coin between jin/nsf
         if team == 0:
             if len(self.jin_players) < self.players_per_team:
                 self.jin_players.append(player)
                 return True, ""
-        if len(self.nsf_players) < self.players_per_team:
-            self.nsf_players.append(player)
-            return True, ""
+        else:
+            if len(self.nsf_players) < self.players_per_team:
+                self.nsf_players.append(player)
+                return True, ""
         return False, f"{player.mention} Sorry, this PUG is currently full!"
 
     def player_leave(self, player):
@@ -165,6 +165,9 @@ async def scramble(ctx):
     else:
         random.shuffle(pug_guilds[ctx.guild].prev_puggers)
         msg = f"{ctx.message.author.name} suggests scrambled teams:\n"
+        # Adding a random human readable phrase here to work as an identifier
+        # for this shuffle, so specific shuffle results are easier to refer to
+        # in voice chat, if there are many of them.
         msg += f"_(random shuffle id: {random_human_readable_phrase()})_\n"
         msg += "_Jinrai players:_\n"
         for i in range(int(len(pug_guilds[ctx.guild].prev_puggers) / 2)):
@@ -202,6 +205,9 @@ async def puggers(ctx):
 
 async def poll_if_pug_ready():
     while True:
+        # Iterating and caching per-guild to support multiple Discord channels
+        # simultaneously using the same bot instance with their own independent
+        # player pools.
         for guild in bot.guilds:
             for channel in guild.channels:
                 if channel.name != PUG_CHANNEL_NAME:
