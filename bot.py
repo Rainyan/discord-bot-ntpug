@@ -192,14 +192,14 @@ async def puggers(ctx):
     msg = (f"{pug_guilds[ctx.guild].num_queued()} / "
            f"{pug_guilds[ctx.guild].num_expected()} player(s) currently "
            "queued")
+
     if pug_guilds[ctx.guild].num_queued() > 0:
+        all_players_queued = pug_guilds[ctx.guild].jin_players + \
+            pug_guilds[ctx.guild].nsf_players
         msg += ": "
-        for player in pug_guilds[ctx.guild].jin_players:
+        for player in all_players_queued:
             msg += f"{player.name}, "
-            msg = msg[:-2]  # trailing ", "
-        for player in pug_guilds[ctx.guild].nsf_players:
-            msg += f"{player.name}, "
-            msg = msg[:-2]  # trailing ", "
+        msg = msg[:-2]  # trailing ", "
     await ctx.send(msg)
 
 
