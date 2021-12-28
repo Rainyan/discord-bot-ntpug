@@ -7,7 +7,7 @@ bot_secret_token: ""
 command_prefix: "!"
 
 # Name of the Discord server channel that the bot listens to
-pug_channel_name: "pug-queue"
+pug_channel_name: pug-queue
 
 # Number of players, total, that are required for a PUG match.
 num_players_required_total: 10
@@ -22,3 +22,13 @@ queue_polling_interval_secs: 5
 # How often (in seconds) to update the bot's "presence" status message,
 # displaying current amount of queued players next to the bot's nickname.
 discord_presence_update_interval_secs: 30
+
+# Name of the puggers role
+pugger_role_name: Puggers
+
+# Threshold, in range of 0.0-1.0, of how many queued players are required
+# for the bot to auto-ping the pugger role.
+pugger_role_ping_threshold: 0.5
+
+# How long to wait, in hours, between role pings at a minimum.
+pugger_role_min_ping_interval_hours: 4.0
