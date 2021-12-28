@@ -16,7 +16,7 @@ from io import BytesIO
 
 
 SCRIPT_NAME = "NT Pug Bot"
-SCRIPT_VERSION = "0.3.0"
+SCRIPT_VERSION = "0.5.0"
 SCRIPT_URL = "https://github.com/Rainyan/discord-bot-ntpug"
 
 CFG_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)),
@@ -31,7 +31,7 @@ with open(CFG_PATH, "r") as f:
         "num_players_required_total": Int(),
         "debug_allow_requeue": Bool(),
         "queue_polling_interval_secs": Int(),
-        "discord_avatar_change_rate_limit_secs": Int(),
+        "discord_presence_update_interval_secs": Int(),
     })
     CFG = load(f.read(), YAML_CFG_SCHEMA)
 assert CFG is not None
@@ -58,23 +58,21 @@ print(f"Now running {SCRIPT_NAME} v.{SCRIPT_VERSION} -- {SCRIPT_URL}",
 
 
 class PugStatus():
-    def __init__(self, players_required=NUM_PLAYERS_REQUIRED):
+    def __init__(self, players_required=NUM_PLAYERS_REQUIRED,
+                 guild_emojis=[]):
+        self.guild_emojis = guild_emojis
         self.jin_players = []
         self.nsf_players = []
         self.prev_puggers = []
         self.players_required_total = players_required
         self.players_per_team = int(self.players_required_total / 2)
-        # Subtract the rate limit, so we try avatar update on script start
-        self.last_changed = int(time.time()) - \
-            CFG["discord_avatar_change_rate_limit_secs"].value
-        # <0, so it always updates on script init
-        self.last_avatar = -1
+        self.last_changed_presence = 0
+        self.last_presence = None
 
     def reset(self):
         self.prev_puggers = self.jin_players + self.nsf_players
         self.jin_players = []
         self.nsf_players = []
-        self.last_changed = int(time.time())
 
     def player_join(self, player, team=None):
         if not DEBUG_ALLOW_REQUEUE and \
@@ -87,12 +85,10 @@ class PugStatus():
         if team == 0:
             if len(self.jin_players) < self.players_per_team:
                 self.jin_players.append(player)
-                self.last_changed = int(time.time())
                 return True, ""
         else:
             if len(self.nsf_players) < self.players_per_team:
                 self.nsf_players.append(player)
-                self.last_changed = int(time.time())
                 return True, ""
         return False, f"{player.mention} Sorry, this PUG is currently full!"
 
@@ -104,7 +100,6 @@ class PugStatus():
 
         left_queue = (num_after != num_before)
         if left_queue:
-            self.last_changed = int(time.time())
             return True, ""
         else:
             return False, (f"{player.mention} You are not currently in the "
@@ -134,54 +129,55 @@ class PugStatus():
         msg = msg[:-2]  # trailing ", "
         msg += (f"\n\nTeams unbalanced? Use **{CFG['command_prefix'].value}"
                 "scramble** to suggest new random teams.")
-        self.last_changed = int(time.time())
         return True, msg
 
+    # TODO: remove this
     async def update_avatar(self):
-        delta_time = int(time.time()) - self.last_changed
-        if delta_time < CFG["discord_avatar_change_rate_limit_secs"].value:
+        with open(DEFAULT_AVATAR_PATH, "rb") as f:
+            try:
+                await bot.user.edit(avatar=f.read())
+            except discord.errors.HTTPException as e:
+                pass
+
+    async def update_presence(self):
+        delta_time = int(time.time()) - self.last_changed_presence
+        if delta_time < CFG["discord_presence_update_interval_secs"].value + 2:
             return
-        num_puggers = min(10, self.num_queued())
-        if num_puggers == self.last_avatar:
-            return
-        with open(DEFAULT_AVATAR_PATH, "rb") as f_original:
-            format = "RGBA"
-            with Image.open(f_original).convert(format) as i:
-                with Image.new(format, i.size, (255, 255, 255, 0)) as layer:
-                    px_to_pt_ratio = 4/3  # 1 pixel = 1.333... font pts
-                    text_scale = 0.75  # 1.0 meaning "entire image"
-                    font_size = int(text_scale * i.size[0] * px_to_pt_ratio)
-                    font = font_manager.FontProperties(family="sans-serif",
-                                                       weight="bold")
-                    font_file = font_manager.findfont(font)
-                    font = ImageFont.truetype(font_file, font_size)
-                    xy = (int(i.size[0] / 2), int(i.size[1] / 2))
-                    text = f"{num_puggers}"
-                    rgba = (255, 0, 186, 128)
-                    draw = ImageDraw.Draw(layer)
-                    # Just use plain avatar if 0 puggers queued
-                    if num_puggers > 0:
-                        draw.text(xy=xy, text=text, fill=rgba, font=font,
-                                  anchor="mm")
-                    save_path = os.path.join(os.path.dirname(
-                        os.path.realpath(__file__)), "static", "avatars",
-                        "temp.png")
-                    final_image = Image.alpha_composite(i, layer)
-                    final_image.save(save_path)
-                    with open(save_path, "rb") as f:
-                        try:
-                            await bot.user.edit(avatar=f.read())
-                            self.last_avatar = num_puggers
-                        except discord.errors.HTTPException as e:
-                            # This is (probably) a rate limit.
-                            # No detailed enough HTTP status code response,
-                            # nor "Retry-After" headers, so I guess we just
-                            # try again some other time ¯\_(ツ)_/¯
-                            pass
-        # Set the last_changed epoch regardless of success to ensure we aren't
-        # getting API banned for spamming avatar update requests beyond the
-        # rate limit.
-        self.last_changed = int(time.time())
+
+        presence = self.last_presence
+        if presence is None:
+            presence = {
+                "activity": discord.BaseActivity(),
+                "status": discord.Status.idle
+            }
+
+        puggers_needed = max(0, self.num_expected() - self.num_queued())
+
+        # Need to keep flipping status because activity update in itself
+        # doesn't seem to propagate that well.
+        status = discord.Status.idle
+        if presence["status"] == status:
+            status = discord.Status.online
+        if puggers_needed > 0:
+            text = f"for {puggers_needed} more pugger"
+            if puggers_needed > 1:
+                text += "s"  # plural
+            else:
+                text += "!"  # need one more!
+            activity = discord.Activity(type=discord.ActivityType.watching,
+                                        name=text)
+        else:
+            text = "a PUG! 🐩"
+            activity = discord.Activity(type=discord.ActivityType.playing,
+                                        name=text)
+
+        presence["activity"] = activity
+        presence["status"] = status
+
+        await bot.change_presence(activity=presence["activity"],
+                                  status=presence["status"])
+        self.last_presence = presence
+        self.last_changed_presence = int(time.time())
         return
 
 
@@ -232,7 +228,8 @@ async def clearpuggers(ctx):
 async def scramble(ctx):
     msg = ""
     if len(pug_guilds[ctx.guild].prev_puggers) == 0:
-        msg = f"{ctx.message.author.mention} No previous PUG found to scramble"
+        msg = (f"{ctx.message.author.mention} Sorry, no previous PUG found to "
+               "scramble")
     else:
         random.shuffle(pug_guilds[ctx.guild].prev_puggers)
         msg = f"{ctx.message.author.name} suggests scrambled teams:\n"
@@ -252,7 +249,7 @@ async def scramble(ctx):
         msg += ("\n\nTeams still unbalanced? Use **"
                 f"{CFG['command_prefix'].value}"
                 "scramble** to suggest new random teams.")
-        await ctx.send(msg)
+    await ctx.send(msg)
 
 
 @bot.command(brief="List players currently queueing for PUG")
@@ -284,17 +281,27 @@ async def poll_if_pug_ready():
                 if channel.name != PUG_CHANNEL_NAME:
                     continue
                 if guild not in pug_guilds:
-                    pug_guilds[guild] = PugStatus()
+                    pug_guilds[guild] = PugStatus(guild_emojis=guild.emojis)
 
                 # Can't set avatar per-guild, so can only support number
                 # avatars with single guild.
                 if len(bot.guilds) == 1:
                     await pug_guilds[guild].update_avatar()
+                    await pug_guilds[guild].update_presence()
 
                 if pug_guilds[guild].is_full():
                     pug_start_success, msg = pug_guilds[guild].start_pug()
                     if pug_start_success:
+                        # Before starting pug and resetting queue, manually
+                        # update presence, so we're guaranteed to have the
+                        # presence status fully up-to-date here.
+                        if len(bot.guilds) == 1:
+                            pug_guilds[guild].last_changed_presence = 0
+                            await pug_guilds[guild].update_presence()
+                        # Ping the puggers
                         await channel.send(msg)
+                        # And finally reset the queue, so we're ready for the
+                        # next PUGs.
                         pug_guilds[guild].reset()
         await asyncio.sleep(CFG["queue_polling_interval_secs"].value)
 
