@@ -13,7 +13,7 @@ import requests
 
 
 SCRIPT_NAME = "NT Pug Bot"
-SCRIPT_VERSION = "0.6.0"
+SCRIPT_VERSION = "0.6.1"
 SCRIPT_URL = "https://github.com/Rainyan/discord-bot-ntpug"
 
 CFG_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)),
@@ -175,7 +175,6 @@ class PugStatus():
             return
         ping_dt_secs = int(time.time()) - self.last_role_ping
         ping_dt_hours = ping_dt_secs / 60 / 60
-        print(ping_dt_hours)
         hours_threshold = CFG["pugger_role_min_ping_interval_hours"].value
         ping_ratio = CFG["pugger_role_ping_threshold"].value
         pugger_role = CFG["pugger_role_name"].value
@@ -195,7 +194,7 @@ class PugStatus():
                                f"{min_nag_hrs} hours, at most.\n"
                                "If you don't want any of these notifications, "
                                "please consider temporarily muting this bot "
-                               f'or leaving the "{pugger_role}" server '
+                               f'or leaving the {role.mention} server '
                                "role._)")
                         await self.guild_channel.send(msg)
                         self.last_role_ping = int(time.time())
