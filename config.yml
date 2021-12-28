@@ -22,5 +22,6 @@ debug_allow_requeue: False
 # playing.
 queue_polling_interval_secs: 5
 
-# Undocumented, but rumors say avatar change rate limit is 10 mins.
-discord_avatar_change_rate_limit_secs: 600
+# How often (in seconds) to update the bot's "presence" status message,
+# displaying current amount of queued players next to the bot's nickname.
+discord_presence_update_interval_secs: 30
