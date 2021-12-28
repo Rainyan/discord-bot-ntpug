@@ -3,9 +3,6 @@
 # which will take precedence over this config value.
 bot_secret_token: ""
 
-# Download url for the bot's default avatar. Should be rectangular image file.
-avatar_download_url: "https://media.discordapp.net/attachments/924309297754673182/925352858063364166/avatar.png"
-
 # The first character of commands, for example "!" for "!pug"
 command_prefix: "!"
 

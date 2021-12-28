@@ -8,15 +8,12 @@ import random
 
 import discord
 from discord.ext import commands
-from matplotlib import font_manager
-from PIL import Image, ImageDraw, ImageFont
 from strictyaml import load, Bool, Int, Map, Seq, Str, YAMLError
 import requests
-from io import BytesIO
 
 
 SCRIPT_NAME = "NT Pug Bot"
-SCRIPT_VERSION = "0.5.0"
+SCRIPT_VERSION = "0.5.1"
 SCRIPT_URL = "https://github.com/Rainyan/discord-bot-ntpug"
 
 CFG_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)),
@@ -25,7 +22,6 @@ assert os.path.isfile(CFG_PATH)
 with open(CFG_PATH, "r") as f:
     YAML_CFG_SCHEMA = Map({
         "bot_secret_token": Str(),
-        "avatar_download_url": Str(),
         "command_prefix": Str(),
         "pug_channel_name": Str(),
         "num_players_required_total": Int(),
@@ -35,15 +31,6 @@ with open(CFG_PATH, "r") as f:
     })
     CFG = load(f.read(), YAML_CFG_SCHEMA)
 assert CFG is not None
-
-DEFAULT_AVATAR_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                                   "static", "avatars", "default.png")
-if not os.path.isfile(DEFAULT_AVATAR_PATH):
-    r = requests.get(CFG["avatar_download_url"].value)
-    r.raise_for_status()
-    with Image.open(BytesIO(r.content)).convert("RGBA") as image:
-        image.save(DEFAULT_AVATAR_PATH)
-    assert os.path.isfile(DEFAULT_AVATAR_PATH)
 
 bot = commands.Bot(command_prefix=CFG["command_prefix"].value)
 NUM_PLAYERS_REQUIRED = CFG["num_players_required_total"].value
@@ -131,14 +118,6 @@ class PugStatus():
                 "scramble** to suggest new random teams.")
         return True, msg
 
-    # TODO: remove this
-    async def update_avatar(self):
-        with open(DEFAULT_AVATAR_PATH, "rb") as f:
-            try:
-                await bot.user.edit(avatar=f.read())
-            except discord.errors.HTTPException as e:
-                pass
-
     async def update_presence(self):
         delta_time = int(time.time()) - self.last_changed_presence
         if delta_time < CFG["discord_presence_update_interval_secs"].value + 2:
@@ -178,7 +157,6 @@ class PugStatus():
                                   status=presence["status"])
         self.last_presence = presence
         self.last_changed_presence = int(time.time())
-        return
 
 
 pug_guilds = {}
@@ -283,26 +261,21 @@ async def poll_if_pug_ready():
                 if guild not in pug_guilds:
                     pug_guilds[guild] = PugStatus(guild_emojis=guild.emojis)
 
-                # Can't set avatar per-guild, so can only support number
-                # avatars with single guild.
-                if len(bot.guilds) == 1:
-                    await pug_guilds[guild].update_avatar()
-                    await pug_guilds[guild].update_presence()
-
                 if pug_guilds[guild].is_full():
                     pug_start_success, msg = pug_guilds[guild].start_pug()
                     if pug_start_success:
                         # Before starting pug and resetting queue, manually
                         # update presence, so we're guaranteed to have the
                         # presence status fully up-to-date here.
-                        if len(bot.guilds) == 1:
-                            pug_guilds[guild].last_changed_presence = 0
-                            await pug_guilds[guild].update_presence()
+                        pug_guilds[guild].last_changed_presence = 0
+                        await pug_guilds[guild].update_presence()
                         # Ping the puggers
                         await channel.send(msg)
                         # And finally reset the queue, so we're ready for the
                         # next PUGs.
                         pug_guilds[guild].reset()
+                else:
+                    await pug_guilds[guild].update_presence()
         await asyncio.sleep(CFG["queue_polling_interval_secs"].value)
 
 
