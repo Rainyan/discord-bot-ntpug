@@ -8,12 +8,12 @@ import random
 
 import discord
 from discord.ext import commands
-from strictyaml import load, Bool, Int, Map, Seq, Str, YAMLError
+from strictyaml import load, Bool, Float, Int, Map, Seq, Str, YAMLError
 import requests
 
 
 SCRIPT_NAME = "NT Pug Bot"
-SCRIPT_VERSION = "0.5.1"
+SCRIPT_VERSION = "0.6.1"
 SCRIPT_URL = "https://github.com/Rainyan/discord-bot-ntpug"
 
 CFG_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)),
@@ -28,26 +28,34 @@ with open(CFG_PATH, "r") as f:
         "debug_allow_requeue": Bool(),
         "queue_polling_interval_secs": Int(),
         "discord_presence_update_interval_secs": Int(),
+        "pugger_role_name": Str(),
+        "pugger_role_ping_threshold": Float(),
+        "pugger_role_min_ping_interval_hours": Float(),
     })
     CFG = load(f.read(), YAML_CFG_SCHEMA)
 assert CFG is not None
 
 bot = commands.Bot(command_prefix=CFG["command_prefix"].value)
 NUM_PLAYERS_REQUIRED = CFG["num_players_required_total"].value
+assert NUM_PLAYERS_REQUIRED > 0, "Need positive number of players"
 assert NUM_PLAYERS_REQUIRED % 2 == 0, "Need even number of players"
 DEBUG_ALLOW_REQUEUE = CFG["debug_allow_requeue"].value
 PUG_CHANNEL_NAME = CFG["pug_channel_name"].value
 BOT_SECRET_TOKEN = os.environ.get("DISCORD_BOT_TOKEN") or \
     CFG["bot_secret_token"].value
+assert CFG["pugger_role_ping_threshold"].value >= 0 and \
+    CFG["pugger_role_ping_threshold"].value <= 1
 
 print(f"Now running {SCRIPT_NAME} v.{SCRIPT_VERSION} -- {SCRIPT_URL}",
       flush=True)
 
 
 class PugStatus():
-    def __init__(self, players_required=NUM_PLAYERS_REQUIRED,
-                 guild_emojis=[]):
+    def __init__(self, guild_channel, players_required=NUM_PLAYERS_REQUIRED,
+                 guild_emojis=[], guild_roles=[]):
         self.guild_emojis = guild_emojis
+        self.guild_roles = guild_roles
+        self.guild_channel = guild_channel
         self.jin_players = []
         self.nsf_players = []
         self.prev_puggers = []
@@ -55,6 +63,7 @@ class PugStatus():
         self.players_per_team = int(self.players_required_total / 2)
         self.last_changed_presence = 0
         self.last_presence = None
+        self.last_role_ping = 0
 
     def reset(self):
         self.prev_puggers = self.jin_players + self.nsf_players
@@ -97,6 +106,9 @@ class PugStatus():
 
     def num_expected(self):
         return self.players_required_total
+
+    def num_more_needed(self):
+        return max(0, self.num_expected() - self.num_queued())
 
     def is_full(self):
         return self.num_queued() >= self.num_expected()
@@ -157,6 +169,36 @@ class PugStatus():
                                   status=presence["status"])
         self.last_presence = presence
         self.last_changed_presence = int(time.time())
+
+    async def ping_role(self):
+        if self.num_more_needed() == 0:
+            return
+        ping_dt_secs = int(time.time()) - self.last_role_ping
+        ping_dt_hours = ping_dt_secs / 60 / 60
+        hours_threshold = CFG["pugger_role_min_ping_interval_hours"].value
+        ping_ratio = CFG["pugger_role_ping_threshold"].value
+        pugger_role = CFG["pugger_role_name"].value
+        if ping_dt_hours >= hours_threshold:
+            pugger_ratio = self.num_queued() / self.num_expected()
+            if pugger_ratio >= ping_ratio:
+                for role in self.guild_roles:
+                    if role.name == pugger_role:
+                        min_nag_hrs = f"{hours_threshold:.1f}"
+                        min_nag_hrs = min_nag_hrs.rstrip("0").rstrip(".")
+                        msg = (f"{role.mention} Need **"
+                               f"{self.num_more_needed()} more puggers** for "
+                               "a game!\n_(This is an automatic ping to all "
+                               "puggers, because the PUG queue is "
+                               f"{(ping_ratio * 100):.0f}% full.\nRest "
+                               "assured, I will only ping you once per "
+                               f"{min_nag_hrs} hours, at most.\n"
+                               "If you don't want any of these notifications, "
+                               "please consider temporarily muting this bot "
+                               f'or leaving the {role.mention} server '
+                               "role._)")
+                        await self.guild_channel.send(msg)
+                        self.last_role_ping = int(time.time())
+                        break
 
 
 pug_guilds = {}
@@ -259,8 +301,9 @@ async def poll_if_pug_ready():
                 if channel.name != PUG_CHANNEL_NAME:
                     continue
                 if guild not in pug_guilds:
-                    pug_guilds[guild] = PugStatus(guild_emojis=guild.emojis)
-
+                    pug_guilds[guild] = PugStatus(guild_channel=channel,
+                                                  guild_emojis=guild.emojis,
+                                                  guild_roles=guild.roles)
                 if pug_guilds[guild].is_full():
                     pug_start_success, msg = pug_guilds[guild].start_pug()
                     if pug_start_success:
@@ -276,6 +319,7 @@ async def poll_if_pug_ready():
                         pug_guilds[guild].reset()
                 else:
                     await pug_guilds[guild].update_presence()
+                    await pug_guilds[guild].ping_role()
         await asyncio.sleep(CFG["queue_polling_interval_secs"].value)
 
 
