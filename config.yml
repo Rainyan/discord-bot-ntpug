@@ -3,6 +3,9 @@
 # which will take precedence over this config value.
 bot_secret_token: ""
 
+# Download url for the bot's default avatar. Should be rectangular image file.
+avatar_download_url: "https://media.discordapp.net/attachments/924309297754673182/925352858063364166/avatar.png"
+
 # The first character of commands, for example "!" for "!pug"
 command_prefix: "!"
 
@@ -18,3 +21,6 @@ debug_allow_requeue: False
 # How often (in seconds) to check if there's enough players pugged up to start
 # playing.
 queue_polling_interval_secs: 5
+
+# Undocumented, but rumors say avatar change rate limit is 10 mins.
+discord_avatar_change_rate_limit_secs: 600
