@@ -13,7 +13,7 @@ import requests
 
 
 SCRIPT_NAME = "NT Pug Bot"
-SCRIPT_VERSION = "0.6.1"
+SCRIPT_VERSION = "0.7.0"
 SCRIPT_URL = "https://github.com/Rainyan/discord-bot-ntpug"
 
 CFG_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)),
@@ -31,6 +31,7 @@ with open(CFG_PATH, "r") as f:
         "pugger_role_name": Str(),
         "pugger_role_ping_threshold": Float(),
         "pugger_role_min_ping_interval_hours": Float(),
+        "pug_admin_role_name": Str(),
     })
     CFG = load(f.read(), YAML_CFG_SCHEMA)
 assert CFG is not None
@@ -240,8 +241,13 @@ async def unpug(ctx):
 async def clearpuggers(ctx):
     if ctx.guild not in pug_guilds or not ctx.channel.name == PUG_CHANNEL_NAME:
         return
-    pug_guilds[ctx.guild].reset()
-    await ctx.send(f"{ctx.message.author.name} has reset the PUG queue")
+    pug_admin_role = CFG["pug_admin_role_name"].value
+    role_names = [role.name for role in ctx.message.author.roles]
+    if (pug_admin_role in role_names) or ("Admins" in role_names):
+        pug_guilds[ctx.guild].reset()
+        await ctx.send(f"{ctx.message.author.name} has reset the PUG queue")
+    else:
+        return
 
 
 @bot.command(brief="Get new random teams suggestion for the latest PUG")
