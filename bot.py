@@ -241,14 +241,13 @@ async def unpug(ctx):
 async def clearpuggers(ctx):
     if ctx.guild not in pug_guilds or not ctx.channel.name == PUG_CHANNEL_NAME:
         return
-    pug_admin_role= CFG["pug_admin_role_name"].value
+    pug_admin_role = CFG["pug_admin_role_name"].value
     role_names = [role.name for role in ctx.message.author.roles]
     if (pug_admin_role in role_names) or ("Admins" in role_names):
         pug_guilds[ctx.guild].reset()
         await ctx.send(f"{ctx.message.author.name} has reset the PUG queue")
     else:
         return
-
 
 
 @bot.command(brief="Get new random teams suggestion for the latest PUG")
