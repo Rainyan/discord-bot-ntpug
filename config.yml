@@ -32,3 +32,6 @@ pugger_role_ping_threshold: 0.5
 
 # How long to wait, in hours, between role pings at a minimum.
 pugger_role_min_ping_interval_hours: 4.0
+
+# Name of the pug maintainer role
+pug_admin_role_name: Moderators
