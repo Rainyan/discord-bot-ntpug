@@ -8,12 +8,13 @@ import random
 
 import discord
 from discord.ext import commands
-from strictyaml import load, Bool, Float, Int, Map, Seq, Str, YAMLError
+from strictyaml import (load, Bool, EmptyList, Float, Int, Map, Seq, Str,
+                        YAMLError)
 import requests
 
 
 SCRIPT_NAME = "NT Pug Bot"
-SCRIPT_VERSION = "0.7.0"
+SCRIPT_VERSION = "0.7.2"
 SCRIPT_URL = "https://github.com/Rainyan/discord-bot-ntpug"
 
 CFG_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)),
@@ -31,7 +32,7 @@ with open(CFG_PATH, "r") as f:
         "pugger_role_name": Str(),
         "pugger_role_ping_threshold": Float(),
         "pugger_role_min_ping_interval_hours": Float(),
-        "pug_admin_role_name": Str(),
+        "pug_admin_role_name": Seq(Str()) | EmptyList(),
     })
     CFG = load(f.read(), YAML_CFG_SCHEMA)
 assert CFG is not None
@@ -241,13 +242,21 @@ async def unpug(ctx):
 async def clearpuggers(ctx):
     if ctx.guild not in pug_guilds or not ctx.channel.name == PUG_CHANNEL_NAME:
         return
-    pug_admin_role = CFG["pug_admin_role_name"].value
-    role_names = [role.name for role in ctx.message.author.roles]
-    if (pug_admin_role in role_names) or ("Admins" in role_names):
+
+    # If zero pug admin roles are configured, assume anyone can !clearpuggers
+    if len(CFG["pug_admin_role_name"]) == 0:
+        is_allowed = True
+    else:
+        pug_admin_roles = [role.value for role in CFG["pug_admin_role_name"]]
+        user_roles = [role.name for role in ctx.message.author.roles]
+        is_allowed = any(role in pug_admin_roles for role in user_roles)
+
+    if is_allowed:
         pug_guilds[ctx.guild].reset()
         await ctx.send(f"{ctx.message.author.name} has reset the PUG queue")
     else:
-        return
+        await ctx.send(f"{ctx.message.author.mention} The PUG queue can only "
+                       f"be reset by users with role(s): _{pug_admin_roles}_")
 
 
 @bot.command(brief="Get new random teams suggestion for the latest PUG")
@@ -334,8 +343,8 @@ def random_human_readable_phrase():
         nouns = f.readlines()
     with open("adjectives.txt", "r") as f:
         adjectives = f.readlines()
-    phrase = (f"{adjectives[random.randint(0, len(adjectives))]} "
-              f"{nouns[random.randint(0, len(nouns))]}")
+    phrase = (f"{adjectives[random.randint(0, len(adjectives) - 1)]} "
+              f"{nouns[random.randint(0, len(nouns) - 1)]}")
     return phrase.replace("\n", "").lower()
 
 
