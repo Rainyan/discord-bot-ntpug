@@ -14,7 +14,7 @@ import requests
 
 
 SCRIPT_NAME = "NT Pug Bot"
-SCRIPT_VERSION = "0.7.1"
+SCRIPT_VERSION = "0.7.2"
 SCRIPT_URL = "https://github.com/Rainyan/discord-bot-ntpug"
 
 CFG_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)),
@@ -343,8 +343,8 @@ def random_human_readable_phrase():
         nouns = f.readlines()
     with open("adjectives.txt", "r") as f:
         adjectives = f.readlines()
-    phrase = (f"{adjectives[random.randint(0, len(adjectives))]} "
-              f"{nouns[random.randint(0, len(nouns))]}")
+    phrase = (f"{adjectives[random.randint(0, len(adjectives) - 1)]} "
+              f"{nouns[random.randint(0, len(nouns) - 1)]}")
     return phrase.replace("\n", "").lower()
 
 
