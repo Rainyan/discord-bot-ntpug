@@ -11,8 +11,15 @@ One day speedrun project and I don't have much idea what I'm doing, but I guess 
 
 Pull requests are welcome! This project complies to [PEP 8](https://www.python.org/dev/peps/pep-0008/) and [pylint defaults](https://pypi.org/project/pylint/); it's recommended to test your final code submission:
 ```sh
-# Installation
 python -m pip install --upgrade pip
+
+# Consider virtualizing the dev environment below to keep things clean.
+# Eg: https://pipenv.pypa.io/en/latest/
+
+# Code installation
+pip install -r requirements.txt
+
+# Test tools installation
 pip install pylint
 pip install pycodestyle
 
