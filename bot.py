@@ -1,26 +1,28 @@
 #!/usr/bin/env python3
 
+"""Discord PUG (pick-up game) bot for Neotokyo.
+   Discord chat commands: !pug / !unpug / !puggers / !scramble / !clearpuggers
+   TODO/DOCS: Useful docstring goes here!
+"""
+
 import asyncio
-import atexit
 import os
 import time
 import random
 
 import discord
 from discord.ext import commands
-from strictyaml import (load, Bool, EmptyList, Float, Int, Map, Seq, Str,
-                        YAMLError)
-import requests
+from strictyaml import load, Bool, EmptyList, Float, Int, Map, Seq, Str
 
 
 SCRIPT_NAME = "NT Pug Bot"
-SCRIPT_VERSION = "0.7.2"
+SCRIPT_VERSION = "0.7.3"
 SCRIPT_URL = "https://github.com/Rainyan/discord-bot-ntpug"
 
 CFG_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                         "config.yml")
 assert os.path.isfile(CFG_PATH)
-with open(CFG_PATH, "r") as f:
+with open(file=CFG_PATH, mode="r", encoding="utf-8") as f_config:
     YAML_CFG_SCHEMA = Map({
         "bot_secret_token": Str(),
         "command_prefix": Str(),
@@ -34,7 +36,7 @@ with open(CFG_PATH, "r") as f:
         "pugger_role_min_ping_interval_hours": Float(),
         "pug_admin_role_name": Seq(Str()) | EmptyList(),
     })
-    CFG = load(f.read(), YAML_CFG_SCHEMA)
+    CFG = load(f_config.read(), YAML_CFG_SCHEMA)
 assert CFG is not None
 
 bot = commands.Bot(command_prefix=CFG["command_prefix"].value)
@@ -53,10 +55,16 @@ print(f"Now running {SCRIPT_NAME} v.{SCRIPT_VERSION} -- {SCRIPT_URL}",
 
 
 class PugStatus():
+    """Object for containing and operating on one Discord server's PUG
+       information.
+    """
+
+    # pylint: disable=too-many-instance-attributes
+    # This might need revisiting, but deal with it for now.
+
     def __init__(self, guild_channel, players_required=NUM_PLAYERS_REQUIRED,
-                 guild_emojis=[], guild_roles=[]):
-        self.guild_emojis = guild_emojis
-        self.guild_roles = guild_roles
+                 guild_roles=None):
+        self.guild_roles = [] if guild_roles is None else guild_roles
         self.guild_channel = guild_channel
         self.jin_players = []
         self.nsf_players = []
@@ -68,11 +76,17 @@ class PugStatus():
         self.last_role_ping = 0
 
     def reset(self):
+        """Stores the previous puggers, and then resets current pugger queue.
+        """
         self.prev_puggers = self.jin_players + self.nsf_players
         self.jin_players = []
         self.nsf_players = []
 
     def player_join(self, player, team=None):
+        """If there is enough room in this PUG queue, assigns this player
+           to a random team to wait in, until the PUG is ready to be started.
+           The specific team rosters can later be shuffled by a !scramble.
+        """
         if not DEBUG_ALLOW_REQUEUE and \
                 (player in self.jin_players or player in self.nsf_players):
             return False, (f"{player.mention} You are already queued! "
@@ -91,6 +105,8 @@ class PugStatus():
         return False, f"{player.mention} Sorry, this PUG is currently full!"
 
     def player_leave(self, player):
+        """Removes a player from the pugger queue if they were in it.
+        """
         num_before = self.num_queued()
         self.jin_players = [p for p in self.jin_players if p != player]
         self.nsf_players = [p for p in self.nsf_players if p != player]
@@ -99,23 +115,32 @@ class PugStatus():
         left_queue = (num_after != num_before)
         if left_queue:
             return True, ""
-        else:
-            return False, (f"{player.mention} You are not currently in the "
-                           "PUG queue")
+        return False, (f"{player.mention} You are not currently in the PUG "
+                       "queue")
 
     def num_queued(self):
+        """Returns the number of puggers currently in the PUG queue.
+        """
         return len(self.jin_players) + len(self.nsf_players)
 
     def num_expected(self):
+        """Returns the number of puggers expected, total, to start a PUG.
+        """
         return self.players_required_total
 
     def num_more_needed(self):
+        """Returns how many more puggers are needed to start a PUG.
+        """
         return max(0, self.num_expected() - self.num_queued())
 
     def is_full(self):
+        """Whether the PUG queue is currently full or not."
+        """
         return self.num_queued() >= self.num_expected()
 
     def start_pug(self):
+        """Starts a PUG match.
+        """
         if len(self.jin_players) == 0 or len(self.nsf_players) == 0:
             self.reset()
             return False, "Error: team was empty"
@@ -133,6 +158,9 @@ class PugStatus():
         return True, msg
 
     async def update_presence(self):
+        """Updates the bot's status message ("presence").
+           This is used for displaying things like the PUG queue status.
+        """
         delta_time = int(time.time()) - self.last_changed_presence
         if delta_time < CFG["discord_presence_update_interval_secs"].value + 2:
             return
@@ -173,6 +201,9 @@ class PugStatus():
         self.last_changed_presence = int(time.time())
 
     async def ping_role(self):
+        """Pings the puggers Discord server role, if it's currently allowed.
+           Frequency of these pings is restricted to avoid being too spammy.
+        """
         if self.num_more_needed() == 0:
             return
         ping_dt_secs = int(time.time()) - self.last_role_ping
@@ -208,11 +239,16 @@ pug_guilds = {}
 
 @bot.command(brief="Test if bot is active")
 async def ping(ctx):
+    """Just a standard Discord bot ping test command for confirming whether
+       the bot is online or not.
+    """
     await ctx.send("pong")
 
 
 @bot.command(brief="Join the PUG queue")
 async def pug(ctx):
+    """Player command for joining the PUG queue.
+    """
     if ctx.guild not in pug_guilds or not ctx.channel.name == PUG_CHANNEL_NAME:
         return
     response = ""
@@ -227,6 +263,8 @@ async def pug(ctx):
 
 @bot.command(brief="Leave the PUG queue")
 async def unpug(ctx):
+    """Player command for leaving the PUG queue.
+    """
     if ctx.guild not in pug_guilds or not ctx.channel.name == PUG_CHANNEL_NAME:
         return
 
@@ -240,6 +278,9 @@ async def unpug(ctx):
 
 @bot.command(brief="Empty the server's PUG queue")
 async def clearpuggers(ctx):
+    """Player command for clearing the PUG queue.
+       This can be restricted to Discord guild specific admin roles.
+    """
     if ctx.guild not in pug_guilds or not ctx.channel.name == PUG_CHANNEL_NAME:
         return
 
@@ -261,6 +302,9 @@ async def clearpuggers(ctx):
 
 @bot.command(brief="Get new random teams suggestion for the latest PUG")
 async def scramble(ctx):
+    """Player command for scrambling the latest full PUG queue.
+       Can be called multiple times for generating new random teams.
+    """
     msg = ""
     if len(pug_guilds[ctx.guild].prev_puggers) == 0:
         msg = (f"{ctx.message.author.mention} Sorry, no previous PUG found to "
@@ -268,9 +312,6 @@ async def scramble(ctx):
     else:
         random.shuffle(pug_guilds[ctx.guild].prev_puggers)
         msg = f"{ctx.message.author.name} suggests scrambled teams:\n"
-        # Adding a random human readable phrase here to work as an identifier
-        # for this shuffle, so specific shuffle results are easier to refer to
-        # in voice chat, if there are many of them.
         msg += f"_(random shuffle id: {random_human_readable_phrase()})_\n"
         msg += "_Jinrai players:_\n"
         for i in range(int(len(pug_guilds[ctx.guild].prev_puggers) / 2)):
@@ -289,6 +330,8 @@ async def scramble(ctx):
 
 @bot.command(brief="List players currently queueing for PUG")
 async def puggers(ctx):
+    """Player command for listing players currently in the PUG queue.
+    """
     if ctx.guild not in pug_guilds or not ctx.channel.name == PUG_CHANNEL_NAME:
         return
 
@@ -307,6 +350,8 @@ async def puggers(ctx):
 
 
 async def poll_if_pug_ready():
+    """The main event loop for the bot.
+    """
     while True:
         # Iterating and caching per-guild to support multiple Discord channels
         # simultaneously using the same bot instance with their own independent
@@ -317,7 +362,6 @@ async def poll_if_pug_ready():
                     continue
                 if guild not in pug_guilds:
                     pug_guilds[guild] = PugStatus(guild_channel=channel,
-                                                  guild_emojis=guild.emojis,
                                                   guild_roles=guild.roles)
                 if pug_guilds[guild].is_full():
                     pug_start_success, msg = pug_guilds[guild].start_pug()
@@ -339,10 +383,14 @@ async def poll_if_pug_ready():
 
 
 def random_human_readable_phrase():
-    with open("nouns.txt", "r") as f:
-        nouns = f.readlines()
-    with open("adjectives.txt", "r") as f:
-        adjectives = f.readlines()
+    """Generates a random human readable phrase to work as an identifier.
+       Can be used for the !scrambles, to make it easier for players to refer
+       to specific scramble permutations via voice chat by using these phrases.
+    """
+    with open(file="nouns.txt", mode="r", encoding="utf-8") as f_nouns:
+        nouns = f_nouns.readlines()
+    with open(file="adjectives.txt", mode="r", encoding="utf-8") as f_adjs:
+        adjectives = f_adjs.readlines()
     phrase = (f"{adjectives[random.randint(0, len(adjectives) - 1)]} "
               f"{nouns[random.randint(0, len(nouns) - 1)]}")
     return phrase.replace("\n", "").lower()
