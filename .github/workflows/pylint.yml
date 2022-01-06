@@ -3,12 +3,12 @@ name: Pylint
 on:
   push:
     branches: [ main ]
-    # Only interested in changes in the Python code, and this workflow itself.
+    # Ignore changes to the readme, and to other actions.
     paths:
-      - '**.py'
-      - 'Pipfile*'
-      - 'requirements.txt'
+      - "**"
       - '.github/workflows/pylint.yml'
+      - "!**.md"
+      - "!**.yml"
   pull_request:
     # The branches below must be a subset of the branches above
     branches: [ main ]
@@ -27,6 +27,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
       run: |
+        echo Action path: $GITHUB_ACTION_PATH
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         pip install pylint
