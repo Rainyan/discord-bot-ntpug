@@ -17,7 +17,9 @@ python bot.py  # Edit config.yml as required before running
 ```
 
 ## Contributing
-Pull requests are welcome! This project complies to [PEP 8](https://www.python.org/dev/peps/pep-0008/) and [pylint defaults](https://pypi.org/project/pylint/); it's recommended to test your final code submission:
+Pull requests are welcome! Please target the `main` branch for your edits.
+
+This project complies to [PEP 8](https://www.python.org/dev/peps/pep-0008/) and [pylint defaults](https://pypi.org/project/pylint/); it's recommended to test your final code submission:
 ```sh
 python -m pip install --upgrade pip
 
