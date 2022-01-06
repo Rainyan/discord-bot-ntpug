@@ -16,7 +16,7 @@ from strictyaml import load, Bool, EmptyList, Float, Int, Map, Seq, Str
 
 
 SCRIPT_NAME = "NT Pug Bot"
-SCRIPT_VERSION = "0.7.3"
+SCRIPT_VERSION = "0.7.4"
 SCRIPT_URL = "https://github.com/Rainyan/discord-bot-ntpug"
 
 CFG_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)),
