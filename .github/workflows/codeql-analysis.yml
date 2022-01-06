@@ -14,12 +14,13 @@ name: "CodeQL"
 on:
   push:
     branches: [ main ]
-    # Only interested in changes in the Python code, and this workflow itself.
+    # Ignore changes to the readme, and to other actions.
     paths:
-      - '**.py'
-      - 'Pipfile*'
-      - 'requirements.txt'
+      - "**"
       - '.github/workflows/codeql-analysis.yml'
+      - "!**.md"
+      - "!**.yml"
+      
   pull_request:
     # The branches below must be a subset of the branches above
     branches: [ main ]
