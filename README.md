@@ -1,6 +1,6 @@
 [![PEP8](https://img.shields.io/badge/code%20style-pep8-orange.svg)](https://www.python.org/dev/peps/pep-0008/)
 [![MIT](https://img.shields.io/github/license/Rainyan/discord-bot-ntpug)](LICENSE)
-[![Tests](https://img.shields.io/github/workflow/status/Rainyan/discord-bot-ntpug/Pylint)](.github/workflows)
+[![Pylint](https://github.com/Rainyan/discord-bot-ntpug/actions/workflows/pylint.yml/badge.svg)](https://github.com/Rainyan/discord-bot-ntpug/actions/workflows/pylint.yml)
 
 # discord-bot-ntpug
 Discord PUG bot for Neotokyo!
