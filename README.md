@@ -3,9 +3,9 @@
 [![Tests](https://img.shields.io/github/workflow/status/Rainyan/discord-bot-ntpug/Pylint)](.github/workflows)
 
 # discord-bot-ntpug
-NT PUG Bot for Discord
+Discord PUG bot for Neotokyo!
 
-One day speedrun project and I don't have much idea what I'm doing, but I guess it works. WIP.
+One day speedrun project turned into something semi-reasonable.
 
 # Installation
 Recommended to use the `main` branch.
