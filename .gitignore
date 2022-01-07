@@ -1,3 +1,8 @@
+# discord-bot-ntpug specific ignore overrides:
+Pipfile
+Pipfile.lock
+
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
