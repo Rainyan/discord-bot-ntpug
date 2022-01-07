@@ -16,7 +16,7 @@ from strictyaml import load, Bool, EmptyList, Float, Int, Map, Seq, Str
 
 
 SCRIPT_NAME = "NT Pug Bot"
-SCRIPT_VERSION = "0.7.4"
+SCRIPT_VERSION = "0.7.5"
 SCRIPT_URL = "https://github.com/Rainyan/discord-bot-ntpug"
 
 CFG_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)),
@@ -387,9 +387,13 @@ def random_human_readable_phrase():
        Can be used for the !scrambles, to make it easier for players to refer
        to specific scramble permutations via voice chat by using these phrases.
     """
-    with open(file="nouns.txt", mode="r", encoding="utf-8") as f_nouns:
+    base_path = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                             "static", "phrase_gen")
+    with open(file=os.path.join(base_path, "nouns.txt"), mode="r",
+              encoding="utf-8") as f_nouns:
         nouns = f_nouns.readlines()
-    with open(file="adjectives.txt", mode="r", encoding="utf-8") as f_adjs:
+    with open(file=os.path.join(base_path, "adjectives.txt"), mode="r",
+              encoding="utf-8") as f_adjs:
         adjectives = f_adjs.readlines()
     phrase = (f"{adjectives[random.randint(0, len(adjectives) - 1)]} "
               f"{nouns[random.randint(0, len(nouns) - 1)]}")
