@@ -11,12 +11,12 @@ import time
 import random
 
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 from strictyaml import load, Bool, EmptyList, Float, Int, Map, Seq, Str
 
 
 SCRIPT_NAME = "NT Pug Bot"
-SCRIPT_VERSION = "0.7.5"
+SCRIPT_VERSION = "0.7.6"
 SCRIPT_URL = "https://github.com/Rainyan/discord-bot-ntpug"
 
 CFG_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)),
@@ -349,39 +349,6 @@ async def puggers(ctx):
     await ctx.send(msg)
 
 
-async def poll_if_pug_ready():
-    """The main event loop for the bot.
-    """
-    while True:
-        # Iterating and caching per-guild to support multiple Discord channels
-        # simultaneously using the same bot instance with their own independent
-        # player pools.
-        for guild in bot.guilds:
-            for channel in guild.channels:
-                if channel.name != PUG_CHANNEL_NAME:
-                    continue
-                if guild not in pug_guilds:
-                    pug_guilds[guild] = PugStatus(guild_channel=channel,
-                                                  guild_roles=guild.roles)
-                if pug_guilds[guild].is_full():
-                    pug_start_success, msg = pug_guilds[guild].start_pug()
-                    if pug_start_success:
-                        # Before starting pug and resetting queue, manually
-                        # update presence, so we're guaranteed to have the
-                        # presence status fully up-to-date here.
-                        pug_guilds[guild].last_changed_presence = 0
-                        await pug_guilds[guild].update_presence()
-                        # Ping the puggers
-                        await channel.send(msg)
-                        # And finally reset the queue, so we're ready for the
-                        # next PUGs.
-                        pug_guilds[guild].reset()
-                else:
-                    await pug_guilds[guild].update_presence()
-                    await pug_guilds[guild].ping_role()
-        await asyncio.sleep(CFG["queue_polling_interval_secs"].value)
-
-
 def random_human_readable_phrase():
     """Generates a random human readable phrase to work as an identifier.
        Can be used for the !scrambles, to make it easier for players to refer
@@ -400,7 +367,57 @@ def random_human_readable_phrase():
     return phrase.replace("\n", "").lower()
 
 
-asyncio.Task(poll_if_pug_ready())
-asyncio.Task(bot.run(BOT_SECRET_TOKEN))
-while True:
-    continue
+class PugQueueCog(commands.Cog):
+    """PUG queue main event loop.
+    """
+
+    def __init__(self, parent_bot):
+        """Acquire lock for asynchronous queue polling,
+           and start the queue loop.
+        """
+        # pylint: disable=no-member
+
+        self.bot = parent_bot
+        self.lock = asyncio.Lock()
+        self.poll_queue.start()
+
+    @tasks.loop(seconds=CFG["queue_polling_interval_secs"].value)
+    async def poll_queue(self):
+        """
+           Poll the PUG queue to see if we're ready to play,
+           and to possibly update our status in various ways.
+
+           Iterating and caching per-guild to support multiple Discord
+           channels simultaneously using the same bot instance with their
+           own independent player pools.
+        """
+
+        async with self.lock:
+            for guild in bot.guilds:
+                for channel in guild.channels:
+                    if channel.name != PUG_CHANNEL_NAME:
+                        continue
+                    if guild not in pug_guilds:
+                        pug_guilds[guild] = PugStatus(guild_channel=channel,
+                                                      guild_roles=guild.roles)
+                    if pug_guilds[guild].is_full():
+                        pug_start_success, msg = pug_guilds[guild].start_pug()
+                        if pug_start_success:
+                            # Before starting pug and resetting queue, manually
+                            # update presence, so we're guaranteed to have the
+                            # presence status fully up-to-date here.
+                            pug_guilds[guild].last_changed_presence = 0
+                            await pug_guilds[guild].update_presence()
+                            # Ping the puggers
+                            await channel.send(msg)
+                            # And finally reset the queue, so we're ready for
+                            # the next PUGs.
+                            pug_guilds[guild].reset()
+                    else:
+                        await pug_guilds[guild].update_presence()
+                        await pug_guilds[guild].ping_role()
+            await asyncio.sleep(CFG["queue_polling_interval_secs"].value)
+
+
+PugQueueCog(bot)
+bot.run(BOT_SECRET_TOKEN)
