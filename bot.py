@@ -11,12 +11,12 @@ import time
 import random
 
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 from strictyaml import load, Bool, EmptyList, Float, Int, Map, Seq, Str
 
 
 SCRIPT_NAME = "NT Pug Bot"
-SCRIPT_VERSION = "0.7.3"
+SCRIPT_VERSION = "0.8.0"
 SCRIPT_URL = "https://github.com/Rainyan/discord-bot-ntpug"
 
 CFG_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)),
@@ -58,10 +58,8 @@ class PugStatus():
     """Object for containing and operating on one Discord server's PUG
        information.
     """
-
     # pylint: disable=too-many-instance-attributes
     # This might need revisiting, but deal with it for now.
-
     def __init__(self, guild_channel, players_required=NUM_PLAYERS_REQUIRED,
                  guild_roles=None):
         self.guild_roles = [] if guild_roles is None else guild_roles
@@ -74,49 +72,55 @@ class PugStatus():
         self.last_changed_presence = 0
         self.last_presence = None
         self.last_role_ping = 0
+        self.lock = asyncio.Lock()
 
-    def reset(self):
+    async def reset(self):
         """Stores the previous puggers, and then resets current pugger queue.
         """
-        self.prev_puggers = self.jin_players + self.nsf_players
-        self.jin_players = []
-        self.nsf_players = []
+        async with self.lock:
+            self.prev_puggers = self.jin_players + self.nsf_players
+            self.jin_players = []
+            self.nsf_players = []
 
-    def player_join(self, player, team=None):
+    async def player_join(self, player, team=None):
         """If there is enough room in this PUG queue, assigns this player
            to a random team to wait in, until the PUG is ready to be started.
            The specific team rosters can later be shuffled by a !scramble.
         """
-        if not DEBUG_ALLOW_REQUEUE and \
-                (player in self.jin_players or player in self.nsf_players):
-            return False, (f"{player.mention} You are already queued! "
-                           "If you wanted to un-PUG, please use **"
-                           f"{CFG['command_prefix'].value}unpug** instead.")
-        if team is None:
-            team = random.randint(0, 1)  # flip a coin between jin/nsf
-        if team == 0:
-            if len(self.jin_players) < self.players_per_team:
-                self.jin_players.append(player)
-                return True, ""
-        else:
-            if len(self.nsf_players) < self.players_per_team:
-                self.nsf_players.append(player)
-                return True, ""
-        return False, f"{player.mention} Sorry, this PUG is currently full!"
+        async with self.lock:
+            if not DEBUG_ALLOW_REQUEUE and \
+                    (player in self.jin_players or player in self.nsf_players):
+                return False, (f"{player.mention} You are already queued! "
+                               "If you wanted to un-PUG, please use **"
+                               f"{CFG['command_prefix'].value}unpug** "
+                               "instead.")
+            if team is None:
+                team = random.randint(0, 1)  # flip a coin between jin/nsf
+            if team == 0:
+                if len(self.jin_players) < self.players_per_team:
+                    self.jin_players.append(player)
+                    return True, ""
+            else:
+                if len(self.nsf_players) < self.players_per_team:
+                    self.nsf_players.append(player)
+                    return True, ""
+            return False, (f"{player.mention} Sorry, this PUG is currently "
+                           "full!")
 
-    def player_leave(self, player):
+    async def player_leave(self, player):
         """Removes a player from the pugger queue if they were in it.
         """
-        num_before = self.num_queued()
-        self.jin_players = [p for p in self.jin_players if p != player]
-        self.nsf_players = [p for p in self.nsf_players if p != player]
-        num_after = self.num_queued()
+        async with self.lock:
+            num_before = self.num_queued()
+            self.jin_players = [p for p in self.jin_players if p != player]
+            self.nsf_players = [p for p in self.nsf_players if p != player]
+            num_after = self.num_queued()
 
-        left_queue = (num_after != num_before)
-        if left_queue:
-            return True, ""
-        return False, (f"{player.mention} You are not currently in the PUG "
-                       "queue")
+            left_queue = (num_after != num_before)
+            if left_queue:
+                return True, ""
+            return False, (f"{player.mention} You are not currently in the "
+                           "PUG queue")
 
     def num_queued(self):
         """Returns the number of puggers currently in the PUG queue.
@@ -138,100 +142,105 @@ class PugStatus():
         """
         return self.num_queued() >= self.num_expected()
 
-    def start_pug(self):
+    async def start_pug(self):
         """Starts a PUG match.
         """
-        if len(self.jin_players) == 0 or len(self.nsf_players) == 0:
-            self.reset()
-            return False, "Error: team was empty"
-        msg = "**PUG is now ready!**\n"
-        msg += "_Jinrai players:_\n"
-        for player in self.jin_players:
-            msg += f"{player.mention}, "
-        msg = msg[:-2]  # trailing ", "
-        msg += "\n_NSF players:_\n"
-        for player in self.nsf_players:
-            msg += f"{player.mention}, "
-        msg = msg[:-2]  # trailing ", "
-        msg += (f"\n\nTeams unbalanced? Use **{CFG['command_prefix'].value}"
-                "scramble** to suggest new random teams.")
-        return True, msg
+        async with self.lock:
+            if len(self.jin_players) == 0 or len(self.nsf_players) == 0:
+                await self.reset()
+                return False, "Error: team was empty"
+            msg = "**PUG is now ready!**\n"
+            msg += "_Jinrai players:_\n"
+            for player in self.jin_players:
+                msg += f"{player.mention}, "
+            msg = msg[:-2]  # trailing ", "
+            msg += "\n_NSF players:_\n"
+            for player in self.nsf_players:
+                msg += f"{player.mention}, "
+            msg = msg[:-2]  # trailing ", "
+            msg += ("\n\nTeams unbalanced? Use **"
+                    f"{CFG['command_prefix'].value}scramble** to suggest new "
+                    "random teams.")
+            return True, msg
 
     async def update_presence(self):
         """Updates the bot's status message ("presence").
            This is used for displaying things like the PUG queue status.
         """
-        delta_time = int(time.time()) - self.last_changed_presence
-        if delta_time < CFG["discord_presence_update_interval_secs"].value + 2:
-            return
+        async with self.lock:
+            delta_time = int(time.time()) - self.last_changed_presence
+            if delta_time < \
+                    CFG["discord_presence_update_interval_secs"].value + 2:
+                return
 
-        presence = self.last_presence
-        if presence is None:
-            presence = {
-                "activity": discord.BaseActivity(),
-                "status": discord.Status.idle
-            }
+            presence = self.last_presence
+            if presence is None:
+                presence = {
+                    "activity": discord.BaseActivity(),
+                    "status": discord.Status.idle
+                }
 
-        puggers_needed = max(0, self.num_expected() - self.num_queued())
+            puggers_needed = max(0, self.num_expected() - self.num_queued())
 
-        # Need to keep flipping status because activity update in itself
-        # doesn't seem to propagate that well.
-        status = discord.Status.idle
-        if presence["status"] == status:
-            status = discord.Status.online
-        if puggers_needed > 0:
-            text = f"for {puggers_needed} more pugger"
-            if puggers_needed > 1:
-                text += "s"  # plural
+            # Need to keep flipping status because activity update in itself
+            # doesn't seem to propagate that well.
+            status = discord.Status.idle
+            if presence["status"] == status:
+                status = discord.Status.online
+            if puggers_needed > 0:
+                text = f"for {puggers_needed} more pugger"
+                if puggers_needed > 1:
+                    text += "s"  # plural
+                else:
+                    text += "!"  # need one more!
+                activity = discord.Activity(type=discord.ActivityType.watching,
+                                            name=text)
             else:
-                text += "!"  # need one more!
-            activity = discord.Activity(type=discord.ActivityType.watching,
-                                        name=text)
-        else:
-            text = "a PUG! 🐩"
-            activity = discord.Activity(type=discord.ActivityType.playing,
-                                        name=text)
+                text = "a PUG! 🐩"
+                activity = discord.Activity(type=discord.ActivityType.playing,
+                                            name=text)
 
-        presence["activity"] = activity
-        presence["status"] = status
+            presence["activity"] = activity
+            presence["status"] = status
 
-        await bot.change_presence(activity=presence["activity"],
-                                  status=presence["status"])
-        self.last_presence = presence
-        self.last_changed_presence = int(time.time())
+            await bot.change_presence(activity=presence["activity"],
+                                      status=presence["status"])
+            self.last_presence = presence
+            self.last_changed_presence = int(time.time())
 
     async def ping_role(self):
         """Pings the puggers Discord server role, if it's currently allowed.
            Frequency of these pings is restricted to avoid being too spammy.
         """
-        if self.num_more_needed() == 0:
-            return
-        ping_dt_secs = int(time.time()) - self.last_role_ping
-        ping_dt_hours = ping_dt_secs / 60 / 60
-        hours_threshold = CFG["pugger_role_min_ping_interval_hours"].value
-        ping_ratio = CFG["pugger_role_ping_threshold"].value
-        pugger_role = CFG["pugger_role_name"].value
-        if ping_dt_hours >= hours_threshold:
-            pugger_ratio = self.num_queued() / self.num_expected()
-            if pugger_ratio >= ping_ratio:
-                for role in self.guild_roles:
-                    if role.name == pugger_role:
-                        min_nag_hrs = f"{hours_threshold:.1f}"
-                        min_nag_hrs = min_nag_hrs.rstrip("0").rstrip(".")
-                        msg = (f"{role.mention} Need **"
-                               f"{self.num_more_needed()} more puggers** for "
-                               "a game!\n_(This is an automatic ping to all "
-                               "puggers, because the PUG queue is "
-                               f"{(ping_ratio * 100):.0f}% full.\nRest "
-                               "assured, I will only ping you once per "
-                               f"{min_nag_hrs} hours, at most.\n"
-                               "If you don't want any of these notifications, "
-                               "please consider temporarily muting this bot "
-                               f'or leaving the {role.mention} server '
-                               "role._)")
-                        await self.guild_channel.send(msg)
-                        self.last_role_ping = int(time.time())
-                        break
+        async with self.lock:
+            if self.num_more_needed() == 0:
+                return
+            ping_dt_secs = int(time.time()) - self.last_role_ping
+            ping_dt_hours = ping_dt_secs / 60 / 60
+            hours_threshold = CFG["pugger_role_min_ping_interval_hours"].value
+            ping_ratio = CFG["pugger_role_ping_threshold"].value
+            pugger_role = CFG["pugger_role_name"].value
+            if ping_dt_hours >= hours_threshold:
+                pugger_ratio = self.num_queued() / self.num_expected()
+                if pugger_ratio >= ping_ratio:
+                    for role in self.guild_roles:
+                        if role.name == pugger_role:
+                            min_nag_hrs = f"{hours_threshold:.1f}"
+                            min_nag_hrs = min_nag_hrs.rstrip("0").rstrip(".")
+                            msg = (f"{role.mention} Need **"
+                                   f"{self.num_more_needed()} more puggers** "
+                                   "for a game!\n_(This is an automatic ping "
+                                   "to all puggers, because the PUG queue is "
+                                   f"{(ping_ratio * 100):.0f}% full.\nRest "
+                                   "assured, I will only ping you once per "
+                                   f"{min_nag_hrs} hours, at most.\n"
+                                   "If you don't want any of these "
+                                   "notifications, please consider "
+                                   "temporarily muting this bot or leaving "
+                                   f"the {role.mention} server role._)")
+                            await self.guild_channel.send(msg)
+                            self.last_role_ping = int(time.time())
+                            break
 
 
 pug_guilds = {}
@@ -252,7 +261,7 @@ async def pug(ctx):
     if ctx.guild not in pug_guilds or not ctx.channel.name == PUG_CHANNEL_NAME:
         return
     response = ""
-    join_success, response = pug_guilds[ctx.guild].player_join(
+    join_success, response = await pug_guilds[ctx.guild].player_join(
         ctx.message.author)
     if join_success:
         response = (f"{ctx.message.author.name} has joined the PUG queue "
@@ -268,7 +277,8 @@ async def unpug(ctx):
     if ctx.guild not in pug_guilds or not ctx.channel.name == PUG_CHANNEL_NAME:
         return
 
-    leave_success, msg = pug_guilds[ctx.guild].player_leave(ctx.message.author)
+    leave_success, msg = await pug_guilds[ctx.guild].player_leave(
+        ctx.message.author)
     if leave_success:
         msg = (f"{ctx.message.author.name} has left the PUG queue "
                f"({pug_guilds[ctx.guild].num_queued()} / "
@@ -293,7 +303,7 @@ async def clearpuggers(ctx):
         is_allowed = any(role in pug_admin_roles for role in user_roles)
 
     if is_allowed:
-        pug_guilds[ctx.guild].reset()
+        await pug_guilds[ctx.guild].reset()
         await ctx.send(f"{ctx.message.author.name} has reset the PUG queue")
     else:
         await ctx.send(f"{ctx.message.author.mention} The PUG queue can only "
@@ -349,54 +359,73 @@ async def puggers(ctx):
     await ctx.send(msg)
 
 
-async def poll_if_pug_ready():
-    """The main event loop for the bot.
-    """
-    while True:
-        # Iterating and caching per-guild to support multiple Discord channels
-        # simultaneously using the same bot instance with their own independent
-        # player pools.
-        for guild in bot.guilds:
-            for channel in guild.channels:
-                if channel.name != PUG_CHANNEL_NAME:
-                    continue
-                if guild not in pug_guilds:
-                    pug_guilds[guild] = PugStatus(guild_channel=channel,
-                                                  guild_roles=guild.roles)
-                if pug_guilds[guild].is_full():
-                    pug_start_success, msg = pug_guilds[guild].start_pug()
-                    if pug_start_success:
-                        # Before starting pug and resetting queue, manually
-                        # update presence, so we're guaranteed to have the
-                        # presence status fully up-to-date here.
-                        pug_guilds[guild].last_changed_presence = 0
-                        await pug_guilds[guild].update_presence()
-                        # Ping the puggers
-                        await channel.send(msg)
-                        # And finally reset the queue, so we're ready for the
-                        # next PUGs.
-                        pug_guilds[guild].reset()
-                else:
-                    await pug_guilds[guild].update_presence()
-                    await pug_guilds[guild].ping_role()
-        await asyncio.sleep(CFG["queue_polling_interval_secs"].value)
-
-
 def random_human_readable_phrase():
     """Generates a random human readable phrase to work as an identifier.
        Can be used for the !scrambles, to make it easier for players to refer
        to specific scramble permutations via voice chat by using these phrases.
     """
-    with open(file="nouns.txt", mode="r", encoding="utf-8") as f_nouns:
+    base_path = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                             "static", "phrase_gen")
+    with open(file=os.path.join(base_path, "nouns.txt"), mode="r",
+              encoding="utf-8") as f_nouns:
         nouns = f_nouns.readlines()
-    with open(file="adjectives.txt", mode="r", encoding="utf-8") as f_adjs:
+    with open(file=os.path.join(base_path, "adjectives.txt"), mode="r",
+              encoding="utf-8") as f_adjs:
         adjectives = f_adjs.readlines()
     phrase = (f"{adjectives[random.randint(0, len(adjectives) - 1)]} "
               f"{nouns[random.randint(0, len(nouns) - 1)]}")
     return phrase.replace("\n", "").lower()
 
 
-asyncio.Task(poll_if_pug_ready())
-asyncio.Task(bot.run(BOT_SECRET_TOKEN))
-while True:
-    continue
+class PugQueueCog(commands.Cog):
+    """PUG queue main event loop.
+    """
+    def __init__(self, parent_bot):
+        """Acquire lock for asynchronous queue polling,
+           and start the queue loop.
+        """
+        # pylint: disable=no-member
+        self.bot = parent_bot
+        self.lock = asyncio.Lock()
+        self.poll_queue.start()
+
+    @tasks.loop(seconds=CFG["queue_polling_interval_secs"].value)
+    async def poll_queue(self):
+        """
+           Poll the PUG queue to see if we're ready to play,
+           and to possibly update our status in various ways.
+
+           Iterating and caching per-guild to support multiple Discord
+           channels simultaneously using the same bot instance with their
+           own independent player pools.
+        """
+        async with self.lock:
+            for guild in bot.guilds:
+                for channel in guild.channels:
+                    if channel.name != PUG_CHANNEL_NAME:
+                        continue
+                    if guild not in pug_guilds:
+                        pug_guilds[guild] = PugStatus(guild_channel=channel,
+                                                      guild_roles=guild.roles)
+                    if pug_guilds[guild].is_full():
+                        pug_start_success, msg = \
+                            await pug_guilds[guild].start_pug()
+                        if pug_start_success:
+                            # Before starting pug and resetting queue, manually
+                            # update presence, so we're guaranteed to have the
+                            # presence status fully up-to-date here.
+                            pug_guilds[guild].last_changed_presence = 0
+                            await pug_guilds[guild].update_presence()
+                            # Ping the puggers
+                            await channel.send(msg)
+                            # And finally reset the queue, so we're ready for
+                            # the next PUGs.
+                            await pug_guilds[guild].reset()
+                    else:
+                        await pug_guilds[guild].update_presence()
+                        await pug_guilds[guild].ping_role()
+            await asyncio.sleep(CFG["queue_polling_interval_secs"].value)
+
+
+PugQueueCog(bot)
+bot.run(BOT_SECRET_TOKEN)
