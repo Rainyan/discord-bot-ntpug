@@ -16,7 +16,7 @@ from strictyaml import load, Bool, EmptyList, Float, Int, Map, Seq, Str
 
 
 SCRIPT_NAME = "NT Pug Bot"
-SCRIPT_VERSION = "0.8.0"
+SCRIPT_VERSION = "0.8.1"
 SCRIPT_URL = "https://github.com/Rainyan/discord-bot-ntpug"
 
 CFG_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)),
@@ -100,10 +100,9 @@ class PugStatus():
                 if len(self.jin_players) < self.players_per_team:
                     self.jin_players.append(player)
                     return True, ""
-            else:
-                if len(self.nsf_players) < self.players_per_team:
-                    self.nsf_players.append(player)
-                    return True, ""
+            if len(self.nsf_players) < self.players_per_team:
+                self.nsf_players.append(player)
+                return True, ""
             return False, (f"{player.mention} Sorry, this PUG is currently "
                            "full!")
 
