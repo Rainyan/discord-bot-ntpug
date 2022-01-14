@@ -34,7 +34,7 @@ pugger_role_ping_threshold: 0.5
 pugger_role_min_ping_interval_hours: 4.0
 
 # How many previous PUG channel messages to check, at most, for a previous pugger role ping.
-pugger_role_ping_max_history: 50
+pugger_role_ping_max_history: 120
 
 # List of 0 or more names of the pug maintainer roles.
 # If any user should be able to do pug queue admin tasks, use an empty value.
