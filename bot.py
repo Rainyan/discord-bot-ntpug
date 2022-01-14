@@ -6,6 +6,7 @@
 """
 
 import asyncio
+from datetime import datetime, timedelta, timezone
 import os
 import time
 import random
@@ -16,7 +17,7 @@ from strictyaml import load, Bool, EmptyList, Float, Int, Map, Seq, Str
 
 
 SCRIPT_NAME = "NT Pug Bot"
-SCRIPT_VERSION = "0.8.1"
+SCRIPT_VERSION = "0.9.0"
 SCRIPT_URL = "https://github.com/Rainyan/discord-bot-ntpug"
 
 CFG_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)),
@@ -34,6 +35,7 @@ with open(file=CFG_PATH, mode="r", encoding="utf-8") as f_config:
         "pugger_role_name": Str(),
         "pugger_role_ping_threshold": Float(),
         "pugger_role_min_ping_interval_hours": Float(),
+        "pugger_role_ping_max_history": Int(),
         "pug_admin_role_name": Seq(Str()) | EmptyList(),
     })
     CFG = load(f_config.read(), YAML_CFG_SCHEMA)
@@ -71,7 +73,6 @@ class PugStatus():
         self.players_per_team = int(self.players_required_total / 2)
         self.last_changed_presence = 0
         self.last_presence = None
-        self.last_role_ping = 0
         self.lock = asyncio.Lock()
 
     async def reset(self):
@@ -207,6 +208,27 @@ class PugStatus():
             self.last_presence = presence
             self.last_changed_presence = int(time.time())
 
+    async def role_ping_deltatime(self):
+        """Returns a datetime.timedelta of latest role ping, or None if no such
+           ping was found.
+        """
+        history_limit = CFG["pugger_role_ping_max_history"].value
+        assert history_limit >= 0
+        # Get UTC time because Discord API also returns times in UTC, and we
+        # need to be able to compare times with it. Need to then remove that
+        # tzinfo awareness to allow subtracting from it using a
+        # timezone-unaware timedelta, to get the resulting delta time.
+        time_now = datetime.now(timezone.utc).replace(tzinfo=None)
+        after = time_now - \
+            timedelta(hours=CFG["pugger_role_min_ping_interval_hours"].value)
+        async for msg in self.guild_channel.history(limit=history_limit,
+                                                    after=after,
+                                                    oldest_first=False):
+            if CFG["pugger_role_name"].value in \
+                    [role.name for role in msg.role_mentions]:
+                return time_now - msg.created_at
+        return None
+
     async def ping_role(self):
         """Pings the puggers Discord server role, if it's currently allowed.
            Frequency of these pings is restricted to avoid being too spammy.
@@ -214,32 +236,37 @@ class PugStatus():
         async with self.lock:
             if self.num_more_needed() == 0:
                 return
-            ping_dt_secs = int(time.time()) - self.last_role_ping
-            ping_dt_hours = ping_dt_secs / 60 / 60
-            hours_threshold = CFG["pugger_role_min_ping_interval_hours"].value
+
+            last_ping_dt = await self.role_ping_deltatime()
+            hours_limit = CFG["pugger_role_min_ping_interval_hours"].value
+            if last_ping_dt is not None:
+                last_ping_hours = last_ping_dt.total_seconds() / 60 / 60
+                if last_ping_hours < hours_limit:
+                    return
+
+            pugger_ratio = self.num_queued() / self.num_expected()
             ping_ratio = CFG["pugger_role_ping_threshold"].value
+            if pugger_ratio < ping_ratio:
+                return
+
             pugger_role = CFG["pugger_role_name"].value
-            if ping_dt_hours >= hours_threshold:
-                pugger_ratio = self.num_queued() / self.num_expected()
-                if pugger_ratio >= ping_ratio:
-                    for role in self.guild_roles:
-                        if role.name == pugger_role:
-                            min_nag_hrs = f"{hours_threshold:.1f}"
-                            min_nag_hrs = min_nag_hrs.rstrip("0").rstrip(".")
-                            msg = (f"{role.mention} Need **"
-                                   f"{self.num_more_needed()} more puggers** "
-                                   "for a game!\n_(This is an automatic ping "
-                                   "to all puggers, because the PUG queue is "
-                                   f"{(ping_ratio * 100):.0f}% full.\nRest "
-                                   "assured, I will only ping you once per "
-                                   f"{min_nag_hrs} hours, at most.\n"
-                                   "If you don't want any of these "
-                                   "notifications, please consider "
-                                   "temporarily muting this bot or leaving "
-                                   f"the {role.mention} server role._)")
-                            await self.guild_channel.send(msg)
-                            self.last_role_ping = int(time.time())
-                            break
+            for role in self.guild_roles:
+                if role.name == pugger_role:
+                    min_nag_hours = f"{hours_limit:.1f}"
+                    min_nag_hours = min_nag_hours.rstrip("0").rstrip(".")
+                    msg = (f"{role.mention} Need **"
+                           f"{self.num_more_needed()} more puggers** "
+                           "for a game!\n_(This is an automatic ping "
+                           "to all puggers, because the PUG queue is "
+                           f"{(ping_ratio * 100):.0f}% full.\nRest "
+                           "assured, I will only ping you once per "
+                           f"{min_nag_hours} hours, at most.\n"
+                           "If you don't want any of these "
+                           "notifications, please consider "
+                           "temporarily muting this bot or leaving "
+                           f"the {role.mention} server role._)")
+                    await self.guild_channel.send(msg)
+                    break
 
 
 pug_guilds = {}
