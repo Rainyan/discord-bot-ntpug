@@ -220,7 +220,7 @@ class PugStatus():
         assert history_limit >= 0
         after = pendulum.now().subtract(
             hours=CFG["pugger_role_min_ping_interval_hours"].value)
-        # Because Pycord 1.7.3 wants non timezone aware date.
+        # Because Pycord 1.7.3 wants non timezone aware "after" date.
         after = datetime.fromisoformat(after.in_timezone("UTC").isoformat())
         after = after.replace(tzinfo=None)
         async for msg in self.guild_channel.history(limit=history_limit,
@@ -228,8 +228,8 @@ class PugStatus():
                                                     oldest_first=False):
             if CFG["pugger_role_name"].value in \
                     [role.name for role in msg.role_mentions]:
-                # Because Pycord 1.7.3 returns non timezone aware date,
-                # and we need to subtract a timedelta from it.
+                # Because Pycord 1.7.3 returns non timezone aware UTC date,
+                # and we need to subtract a timedelta using it.
                 naive_utc_now = datetime.now(timezone.utc).replace(tzinfo=None)
                 return naive_utc_now - msg.created_at
         return None
