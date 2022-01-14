@@ -214,7 +214,10 @@ class PugStatus():
         """
         history_limit = CFG["pugger_role_ping_max_history"].value
         assert history_limit >= 0
-        # Get UTC time because Discord API also returns times in UTC.
+        # Get UTC time because Discord API also returns times in UTC, and we
+        # need to be able to compare times with it. Need to then remove that
+        # tzinfo awareness to allow subtracting from it using a
+        # timezone-unaware timedelta, to get the resulting delta time.
         time_now = datetime.now(timezone.utc).replace(tzinfo=None)
         after = time_now - \
             timedelta(hours=CFG["pugger_role_min_ping_interval_hours"].value)
