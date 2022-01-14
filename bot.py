@@ -6,18 +6,22 @@
 """
 
 import asyncio
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 import os
 import time
 import random
 
 import discord
 from discord.ext import commands, tasks
+import pendulum
 from strictyaml import load, Bool, EmptyList, Float, Int, Map, Seq, Str
 
 
+# May encounter breaking changes otherwise
+assert discord.version_info.major == 1 and discord.version_info.minor == 7
+
 SCRIPT_NAME = "NT Pug Bot"
-SCRIPT_VERSION = "0.9.0"
+SCRIPT_VERSION = "0.9.1"
 SCRIPT_URL = "https://github.com/Rainyan/discord-bot-ntpug"
 
 CFG_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)),
@@ -214,19 +218,20 @@ class PugStatus():
         """
         history_limit = CFG["pugger_role_ping_max_history"].value
         assert history_limit >= 0
-        # Get UTC time because Discord API also returns times in UTC, and we
-        # need to be able to compare times with it. Need to then remove that
-        # tzinfo awareness to allow subtracting from it using a
-        # timezone-unaware timedelta, to get the resulting delta time.
-        time_now = datetime.now(timezone.utc).replace(tzinfo=None)
-        after = time_now - \
-            timedelta(hours=CFG["pugger_role_min_ping_interval_hours"].value)
+        after = pendulum.now().subtract(
+            hours=CFG["pugger_role_min_ping_interval_hours"].value)
+        # Because Pycord 1.7.3 wants non timezone aware date.
+        after = datetime.fromisoformat(after.in_timezone("UTC").isoformat())
+        after = after.replace(tzinfo=None)
         async for msg in self.guild_channel.history(limit=history_limit,
                                                     after=after,
                                                     oldest_first=False):
             if CFG["pugger_role_name"].value in \
                     [role.name for role in msg.role_mentions]:
-                return time_now - msg.created_at
+                # Because Pycord 1.7.3 returns non timezone aware date,
+                # and we need to subtract a timedelta from it.
+                naive_utc_now = datetime.now(timezone.utc).replace(tzinfo=None)
+                return naive_utc_now - msg.created_at
         return None
 
     async def ping_role(self):
