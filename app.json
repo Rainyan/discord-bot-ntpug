@@ -6,6 +6,7 @@
     "Neotokyo",
     "PUG"
   ],
+  "website": "https://github.com/Rainyan/discord-bot-ntpug",
   "repository": "https://github.com/Rainyan/discord-bot-ntpug",
   "env": {
     "DISCORD_BOT_TOKEN": {
