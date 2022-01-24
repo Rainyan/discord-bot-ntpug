@@ -21,9 +21,11 @@ Otherwise, please follow the manual deployment instructions below.
 ### Manual deployment
 ```sh
 git clone https://github.com/Rainyan/discord-bot-ntpug
+cd discord-bot-ntpug
+git switch deploy
 python -m pip install --upgrade pip
 pip install -r requirements.txt
-python bot.py  # Edit config.yml as required before running
+python bot.py  # Edit config.yml and/or set env vars as required before running
 ```
 
 # Contributing
