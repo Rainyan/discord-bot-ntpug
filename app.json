@@ -1,0 +1,20 @@
+{
+  "name": "Discord NT PUG Bot",
+  "description": "Discord PUG bot for Neotokyo!",
+  "keywords": [
+    "Discord bot",
+    "Neotokyo",
+    "PUG"
+  ],
+  "website": "https://github.com/Rainyan/discord-bot-ntpug",
+  "repository": "https://github.com/Rainyan/discord-bot-ntpug",
+  "env": {
+    "DISCORD_BOT_TOKEN": {
+      "description": "Discord bot API secret token. For info on how to generate this, please see: https://discord.com/developers/docs"
+    }
+  },
+  "formation": {
+    "quantity": 1,
+    "size": "free"
+  }
+}
