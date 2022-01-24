@@ -3,15 +3,22 @@
 [![CodeQL](https://github.com/Rainyan/discord-bot-ntpug/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/Rainyan/discord-bot-ntpug/actions/workflows/codeql-analysis.yml)
 [![Pylint](https://github.com/Rainyan/discord-bot-ntpug/actions/workflows/pylint.yml/badge.svg)](https://github.com/Rainyan/discord-bot-ntpug/actions/workflows/pylint.yml)
 
-[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/Rainyan/discord-bot-ntpug/tree/deploy)
-
 # discord-bot-ntpug
 Discord PUG bot for Neotokyo!
 
 One day speedrun project turned into something semi-reasonable.
 
 # Installation
-Recommended to use the `main` branch.
+For running the bot, it's recommended to use the `deploy` branch.
+
+### Remote deployment
+If you want a one-click deployment, the button below generates a Heroku app for you:
+
+[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/Rainyan/discord-bot-ntpug/tree/deploy)
+
+Otherwise, please follow the manual deployment instructions below.
+
+### Manual deployment
 ```sh
 git clone https://github.com/Rainyan/discord-bot-ntpug
 python -m pip install --upgrade pip
