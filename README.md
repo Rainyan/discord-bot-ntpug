@@ -16,16 +16,16 @@ If you want a one-click deployment, the button below generates a Heroku app for 
 
 [![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/Rainyan/discord-bot-ntpug/tree/deploy)
 
-Otherwise, please follow the manual deployment instructions below.
+Otherwise, please follow the manual installation instructions below.
 
-### Manual deployment
+### Manual installation
 ```sh
 git clone https://github.com/Rainyan/discord-bot-ntpug
 cd discord-bot-ntpug
 git switch deploy
 python -m pip install --upgrade pip
 pip install -r requirements.txt
-python bot.py  # Edit config.yml and/or set env vars as required before running
+python bot.py  # Edit config.yml and/or set env vars as required
 ```
 
 # Contributing
