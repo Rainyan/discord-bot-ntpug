@@ -9,7 +9,7 @@
   "repository": "https://github.com/Rainyan/discord-bot-ntpug",
   "env": {
     "DISCORD_BOT_TOKEN": {
-      "description": "Discord bot API secret token"
+      "description": "Discord bot API secret token. For info on how to generate this, please see: https://discord.com/developers/docs"
     }
   },
   "formation": {
