@@ -18,6 +18,10 @@ from strictyaml import load, Bool, EmptyList, Float, Int, Map, Seq, Str
 
 
 # May encounter breaking changes otherwise
+# FIXME: Discord API "decomissions" are scheduled for April 30, 2022:
+# https://github.com/discord/discord-api-docs/discussions/4510
+# Probably have to upgrade to pycord 2.X dev branch, or
+# some original discord.py project equivalent whenever it releases.
 assert discord.version_info.major == 1 and discord.version_info.minor == 7
 
 SCRIPT_NAME = "NT Pug Bot"
