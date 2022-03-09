@@ -18,10 +18,14 @@ from strictyaml import load, Bool, EmptyList, Float, Int, Map, Seq, Str
 
 
 # May encounter breaking changes otherwise
+# NOTE: Discord API "decomissions" are scheduled for April 30, 2022:
+# https://github.com/discord/discord-api-docs/discussions/4510
+# Probably have to upgrade to pycord 2.X dev branch, or
+# some original discord.py project equivalent whenever it releases.
 assert discord.version_info.major == 1 and discord.version_info.minor == 7
 
 SCRIPT_NAME = "NT Pug Bot"
-SCRIPT_VERSION = "0.9.1"
+SCRIPT_VERSION = "0.10.0"
 SCRIPT_URL = "https://github.com/Rainyan/discord-bot-ntpug"
 
 CFG_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)),
@@ -41,6 +45,7 @@ with open(file=CFG_PATH, mode="r", encoding="utf-8") as f_config:
         "pugger_role_min_ping_interval_hours": Float(),
         "pugger_role_ping_max_history": Int(),
         "pug_admin_role_name": Seq(Str()) | EmptyList(),
+        "restore_puggers_limit_hours": Int(),
     })
     CFG = load(f_config.read(), YAML_CFG_SCHEMA)
 assert CFG is not None
@@ -55,6 +60,10 @@ BOT_SECRET_TOKEN = os.environ.get("DISCORD_BOT_TOKEN") or \
     CFG["bot_secret_token"].value
 assert CFG["pugger_role_ping_threshold"].value >= 0 and \
     CFG["pugger_role_ping_threshold"].value <= 1
+
+# This is a variable because the text used for detecting previous PUGs when
+# restoring status during restart.
+PUG_READY_TITLE = "**PUG is now ready!**"
 
 print(f"Now running {SCRIPT_NAME} v.{SCRIPT_VERSION} -- {SCRIPT_URL}",
       flush=True)
@@ -111,6 +120,50 @@ class PugStatus():
             return False, (f"{player.mention} Sorry, this PUG is currently "
                            "full!")
 
+    async def reload_puggers(self):
+        """Iterate PUG channel's recent message history to figure out who
+           should be pugged. This is used both for restoring puggers after a
+           bot restart, but also for dropping inactive players from the queue
+           after inactivity of "restore_puggers_limit_hours" period.
+        """
+        assert CFG["restore_puggers_limit_hours"].value > 0
+        after = pendulum.now().subtract(
+            hours=CFG["restore_puggers_limit_hours"].value)
+        # Because Pycord 1.7.3 wants non timezone aware "after" date.
+        after = datetime.fromisoformat(after.in_timezone("UTC").isoformat())
+        after = after.replace(tzinfo=None)
+
+        def is_pug_cmd(msg):
+            """Predicate for PUG join chat commands.
+            """
+            return msg.content == f"{CFG['command_prefix'].value}pug"
+
+        def is_unpug_cmd(msg):
+            """Predicate for PUG un-join chat commands.
+            """
+            return msg.content == f"{CFG['command_prefix'].value}unpug"
+
+        def is_pug_start(msg):
+            """Predicate for PUG start.
+            """
+            return msg.author.bot and msg.content.startswith(PUG_READY_TITLE)
+
+        def predicate(msg):
+            """Combined predicate for filtering the message history for
+               enumeration.
+            """
+            return is_pug_cmd(msg) or is_unpug_cmd(msg) or is_pug_start(msg)
+
+        async for msg in self.guild_channel.history(after=after,
+                                                    oldest_first=True).\
+                filter(predicate):
+            if is_pug_start(msg):
+                await self.reset()
+            elif is_pug_cmd(msg):
+                await self.player_join(msg.author)
+            else:
+                await self.player_leave(msg.author)
+
     async def player_leave(self, player):
         """Removes a player from the pugger queue if they were in it.
         """
@@ -153,7 +206,7 @@ class PugStatus():
             if len(self.jin_players) == 0 or len(self.nsf_players) == 0:
                 await self.reset()
                 return False, "Error: team was empty"
-            msg = "**PUG is now ready!**\n"
+            msg = f"{PUG_READY_TITLE}\n"
             msg += "_Jinrai players:_\n"
             for player in self.jin_players:
                 msg += f"{player.mention}, "
@@ -419,11 +472,11 @@ class PugQueueCog(commands.Cog):
         self.bot = parent_bot
         self.lock = asyncio.Lock()
         self.poll_queue.start()
+        self.clear_inactive_puggers.start()
 
     @tasks.loop(seconds=CFG["queue_polling_interval_secs"].value)
     async def poll_queue(self):
-        """
-           Poll the PUG queue to see if we're ready to play,
+        """Poll the PUG queue to see if we're ready to play,
            and to possibly update our status in various ways.
 
            Iterating and caching per-guild to support multiple Discord
@@ -438,6 +491,7 @@ class PugQueueCog(commands.Cog):
                     if guild not in pug_guilds:
                         pug_guilds[guild] = PugStatus(guild_channel=channel,
                                                       guild_roles=guild.roles)
+                        await pug_guilds[guild].reload_puggers()
                     if pug_guilds[guild].is_full():
                         pug_start_success, msg = \
                             await pug_guilds[guild].start_pug()
@@ -455,7 +509,21 @@ class PugQueueCog(commands.Cog):
                     else:
                         await pug_guilds[guild].update_presence()
                         await pug_guilds[guild].ping_role()
-            await asyncio.sleep(CFG["queue_polling_interval_secs"].value)
+
+    @tasks.loop(hours=1)
+    async def clear_inactive_puggers(self):
+        """Periodically clear inactive puggers from the queue(s).
+        """
+        async with self.lock:
+            for guild in bot.guilds:
+                for channel in guild.channels:
+                    if channel.name != PUG_CHANNEL_NAME:
+                        continue
+                    if guild not in pug_guilds:
+                        continue
+                    if pug_guilds[guild].is_full():
+                        continue
+                    await pug_guilds[guild].reload_puggers()
 
 
 PugQueueCog(bot)
