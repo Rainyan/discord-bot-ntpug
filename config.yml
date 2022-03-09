@@ -1,6 +1,7 @@
 # Bot secret token goes here. Don't share this value with others.
 # Alternatively, you can set the OS environment variable DISCORD_BOT_TOKEN,
 # which will take precedence over this config value.
+# For info on how to generate this token, please see: https://discord.com/developers/docs
 bot_secret_token: ""
 
 # The first character of commands, for example "!" for "!pug"
