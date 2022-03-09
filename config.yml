@@ -41,3 +41,6 @@ pugger_role_ping_max_history: 120
 pug_admin_role_name:
     - Admins
     - Moderators
+
+# How long to keep idle puggers in the queue before automatically un-queueing them.
+restore_puggers_limit_hours: 16
