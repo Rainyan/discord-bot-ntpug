@@ -137,14 +137,17 @@ class PugStatus():
             """Predicate for PUG join chat commands.
             """
             return msg.content == f"{CFG['command_prefix'].value}pug"
+
         def is_unpug_cmd(msg):
             """Predicate for PUG un-join chat commands.
             """
             return msg.content == f"{CFG['command_prefix'].value}unpug"
+
         def is_pug_start(msg):
             """Predicate for PUG start.
             """
             return msg.author.bot and msg.content.startswith(PUG_READY_TITLE)
+
         def predicate(msg):
             """Combined predicate for filtering the message history for
                enumeration.
