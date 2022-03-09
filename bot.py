@@ -25,7 +25,7 @@ from strictyaml import load, Bool, EmptyList, Float, Int, Map, Seq, Str
 assert discord.version_info.major == 1 and discord.version_info.minor == 7
 
 SCRIPT_NAME = "NT Pug Bot"
-SCRIPT_VERSION = "0.10.0"
+SCRIPT_VERSION = "0.10.1"
 SCRIPT_URL = "https://github.com/Rainyan/discord-bot-ntpug"
 
 CFG_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)),
@@ -154,6 +154,9 @@ class PugStatus():
             """
             return is_pug_cmd(msg) or is_unpug_cmd(msg) or is_pug_start(msg)
 
+        # First reset the PUG queue, and then replay the pug/unpug traffic
+        # within the acceptable "restore_puggers_limit_hours" history range.
+        await self.reset()
         async for msg in self.guild_channel.history(after=after,
                                                     oldest_first=True).\
                 filter(predicate):
