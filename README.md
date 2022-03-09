@@ -39,6 +39,8 @@ python -m pip install --upgrade pip
 # Before continuing, consider virtualizing the
 # environment below to keep things clean.
 # https://pipenv.pypa.io/en/latest/
+
+# Install requirements
 pip install -r requirements.txt
 
 # Edit config.yml and/or set env vars as required
@@ -55,17 +57,20 @@ This project complies to [PEP 8](https://www.python.org/dev/peps/pep-0008/) and 
 ```sh
 python -m pip install --upgrade pip
 
-# Consider virtualizing the dev environment below to keep things clean.
+# Consider virtualizing the dev environment
+# below to keep things clean.
 # Eg: https://pipenv.pypa.io/en/latest/
 
-# Code installation
+# Install requirements
 pip install -r requirements.txt
 
-# Test tools installation
+# Test tools installation (if you're using a venv,
+# you may wish to also install these tools inside
+# it to ensure they can see the requirements)
 pip install pylint
 pip install pycodestyle
 
-# Test
+# Lint the code!
 pylint bot.py
 pycodestyle bot.py
 ```
