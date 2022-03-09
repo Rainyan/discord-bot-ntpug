@@ -45,6 +45,9 @@ pip install -r requirements.txt
 python bot.py
 ```
 
+# Troubleshooting
+Check the issues to see if your problem has already been reported. If not, feel free to open a new issue.
+
 # Contributing
 Pull requests are welcome! Please target the `main` branch for your edits.
 
