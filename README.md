@@ -31,8 +31,14 @@ git clone https://github.com/Rainyan/discord-bot-ntpug
 cd discord-bot-ntpug
 git switch deploy
 python -m pip install --upgrade pip
+
+# Before continuing, consider virtualizing the
+# environment below to keep things clean.
+# https://pipenv.pypa.io/en/latest/
 pip install -r requirements.txt
-python bot.py  # Edit config.yml and/or set env vars as required
+
+# Edit config.yml and/or set env vars as required
+python bot.py
 ```
 
 # Contributing
