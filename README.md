@@ -6,7 +6,8 @@
 # discord-bot-ntpug
 Discord bot for organizing PUGs (pick-up games). Built for Neotokyo, but should work for any two-team game with even number of players total.
 
-# Commands
+# Usage
+### Commands
 Commands are prefixed with a character defined by the config value `command_prefix`, by default `"!"`, so the command `pug` becomes `!pug` in the Discord chat, and so on.
 * `ping` — Bot will simply respond with "Pong". Use to test if the bot is still online and responsive.
 * `pug` — Join the PUG queue if there is room.
@@ -14,6 +15,9 @@ Commands are prefixed with a character defined by the config value `command_pref
 * `puggers` — List players currently in the PUG queue.
 * `scramble` — Suggest randomly scrambled teams for the last full PUG for balancing reasons. Can be repeated until a satisfactory scramble is reached.
 * `clearpuggers` — Empty the PUG queue. Command access can be restricted by role(s) with the config value `pug_admin_role_name`.
+
+### Config values
+The config values have been documented as comments in the [config.yml file](config.yml) itself.
 
 # Installation
 For running the bot, it's recommended to use the `deploy` branch.
