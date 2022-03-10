@@ -25,7 +25,7 @@ from strictyaml import load, Bool, EmptyList, Float, Int, Map, Seq, Str
 assert discord.version_info.major == 1 and discord.version_info.minor == 7
 
 SCRIPT_NAME = "NT Pug Bot"
-SCRIPT_VERSION = "0.10.1"
+SCRIPT_VERSION = "0.11.0"
 SCRIPT_URL = "https://github.com/Rainyan/discord-bot-ntpug"
 
 CFG_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)),
@@ -46,6 +46,7 @@ with open(file=CFG_PATH, mode="r", encoding="utf-8") as f_config:
         "pugger_role_ping_max_history": Int(),
         "pug_admin_role_name": Seq(Str()) | EmptyList(),
         "restore_puggers_limit_hours": Int(),
+        "ping_puggers_cooldown_secs": Float(),
     })
     CFG = load(f_config.read(), YAML_CFG_SCHEMA)
 assert CFG is not None
@@ -446,6 +447,72 @@ async def puggers(ctx):
     await ctx.send(msg)
 
 
+@commands.cooldown(rate=1, per=CFG["ping_puggers_cooldown_secs"].value,
+                   type=commands.BucketType.user)
+@bot.command(brief="Ping all players currently queueing for PUG")
+async def ping_puggers(ctx):
+    """Player command to ping all players currently inside the PUG queue.
+    """
+    if ctx.guild not in pug_guilds or not ctx.channel.name == PUG_CHANNEL_NAME:
+        # Don't set cooldown for failed invocations.
+        ping_puggers.reset_cooldown(ctx)
+        return
+
+    pug_admin_roles = [role.value for role in CFG["pug_admin_role_name"]]
+    user_roles = [role.name for role in ctx.message.author.roles]
+    is_admin = any(role in pug_admin_roles for role in user_roles)
+
+    # Only admins and players in the queue themselves are allowed to ping queue
+    if not is_admin:
+        if ctx.message.author not in pug_guilds[ctx.guild].jin_players and \
+                ctx.message.author not in pug_guilds[ctx.guild].nsf_players:
+            if pug_guilds[ctx.guild].num_queued() == 0:
+                await ctx.send(f"{ctx.author.mention} PUG queue is currently "
+                               "empty.")
+            else:
+                await ctx.send(f"{ctx.author.mention} Sorry, to be able to "
+                               "ping the PUG queue, you have to be queued "
+                               "yourself, or have the role(s): "
+                               f"_{pug_admin_roles}_")
+            ping_puggers.reset_cooldown(ctx)
+            return
+
+    async with pug_guilds[ctx.guild].lock:
+        # Comparing <=1 instead of 0 because it makes no sense to ping others
+        # if you're the only one currently in the queue.
+        if pug_guilds[ctx.guild].num_queued() <= 1:
+            await ctx.send(f"{ctx.author.mention} There are no other players "
+                           "in the queue to ping!")
+            ping_puggers.reset_cooldown(ctx)
+            return
+
+    # Require an info message instead of forcing pingees to spend time figuring
+    # out why they were pinged. We will construct a jump_url to this message.
+    args = ctx.message.content.split(" ", maxsplit=1)
+    if len(args) <= 1 or len(args[1].strip()) == 0:
+        await ctx.send(f"{ctx.author.mention} Please include a message after "
+                       "the command, describing why you pinged the PUG queue.")
+        ping_puggers.reset_cooldown(ctx)
+        return
+
+    msg = ""
+    async with pug_guilds[ctx.guild].lock:
+        for player in [p for p in pug_guilds[ctx.guild].jin_players
+                       if p != ctx.author]:
+            msg += f"{player.mention}, "
+        for player in [p for p in pug_guilds[ctx.guild].nsf_players
+                       if p != ctx.author]:
+            msg += f"{player.mention}, "
+        msg = msg[:-2]  # trailing ", "
+
+    msg += (f" User {ctx.author.mention} is pinging the PUG queue: "
+            f"{ctx.message.jump_url}")
+    await ctx.send(msg)
+    # No cooldown for admin pings.
+    if is_admin:
+        ping_puggers.reset_cooldown(ctx)
+
+
 def random_human_readable_phrase():
     """Generates a random human readable phrase to work as an identifier.
        Can be used for the !scrambles, to make it easier for players to refer
@@ -462,6 +529,33 @@ def random_human_readable_phrase():
     phrase = (f"{adjectives[random.randint(0, len(adjectives) - 1)]} "
               f"{nouns[random.randint(0, len(nouns) - 1)]}")
     return phrase.replace("\n", "").lower()
+
+
+class ErrorHandlerCog(commands.Cog):
+    """Helper class for error handling.
+    """
+    def __init__(self, parent_bot):
+        self.bot = parent_bot
+
+    @commands.Cog.listener()
+    # pylint: disable=no-self-use
+    async def on_command_error(self, ctx, err):
+        """Error handler for bot commands.
+        """
+        # This could be a typo, or a command meant for another bot.
+        if isinstance(err, discord.ext.commands.errors.CommandNotFound):
+            print(f"Ignoring unknown command: \"{ctx.message.content}\"")
+            return
+        # This command is on cooldown from being used too often.
+        if isinstance(err, discord.ext.commands.errors.CommandOnCooldown):
+            # Returns a human readable "<so and so long> before" string.
+            retry_after = pendulum.now().diff_for_humans(pendulum.now().add(
+                            seconds=err.retry_after))
+            await ctx.send(f"{ctx.message.author.mention} You're doing it too "
+                           f"much! Please wait {retry_after} trying again.")
+            return
+        # Something else happened! Just raise the error for the logs to catch.
+        raise err
 
 
 class PugQueueCog(commands.Cog):
@@ -529,5 +623,6 @@ class PugQueueCog(commands.Cog):
                     await pug_guilds[guild].reload_puggers()
 
 
-PugQueueCog(bot)
+bot.add_cog(ErrorHandlerCog(bot))
+bot.add_cog(PugQueueCog(bot))
 bot.run(BOT_SECRET_TOKEN)
