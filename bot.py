@@ -490,8 +490,8 @@ async def ping_puggers(ctx):
     # out why they were pinged. We will construct a jump_url to this message.
     args = ctx.message.content.split(" ", maxsplit=1)
     if len(args) <= 1 or len(args[1].strip()) == 0:
-        await ctx.send(f"{ctx.author.mention} Please include a message to the "
-                       "PUG queue.")
+        await ctx.send(f"{ctx.author.mention} Please include a message after "
+                       "the command describing why you pinged the PUG queue.")
         ping_puggers.reset_cooldown(ctx)
         return
 
