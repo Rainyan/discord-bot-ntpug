@@ -491,15 +491,17 @@ async def ping_puggers(ctx):
     args = ctx.message.content.split(" ", maxsplit=1)
     if len(args) <= 1 or len(args[1].strip()) == 0:
         await ctx.send(f"{ctx.author.mention} Please include a message after "
-                       "the command describing why you pinged the PUG queue.")
+                       "the command, describing why you pinged the PUG queue.")
         ping_puggers.reset_cooldown(ctx)
         return
 
     msg = ""
     async with pug_guilds[ctx.guild].lock:
-        for player in pug_guilds[ctx.guild].jin_players:
+        for player in [p for p in pug_guilds[ctx.guild].jin_players
+                       if p != ctx.author]:
             msg += f"{player.mention}, "
-        for player in pug_guilds[ctx.guild].nsf_players:
+        for player in [p for p in pug_guilds[ctx.guild].nsf_players
+                       if p != ctx.author]:
             msg += f"{player.mention}, "
         msg = msg[:-2]  # trailing ", "
 
