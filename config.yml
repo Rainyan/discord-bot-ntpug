@@ -1,6 +1,7 @@
 # Bot secret token goes here. Don't share this value with others.
 # Alternatively, you can set the OS environment variable DISCORD_BOT_TOKEN,
 # which will take precedence over this config value.
+# For info on how to generate this token, please see: https://discord.com/developers/docs
 bot_secret_token: ""
 
 # The first character of commands, for example "!" for "!pug"
@@ -44,3 +45,7 @@ pug_admin_role_name:
 
 # How long to keep idle puggers in the queue before automatically un-queueing them.
 restore_puggers_limit_hours: 16
+
+# How often can PUG queuers bulk-ping all the other players currently in the queue, in seconds.
+# Admin roles defined by "pug_admin_role_name" are not affected by this limit.
+ping_puggers_cooldown_secs: 600.0
