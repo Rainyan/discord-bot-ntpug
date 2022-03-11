@@ -9,13 +9,13 @@ Discord bot for organizing PUGs (pick-up games). Built for Neotokyo, but should 
 # Usage
 ### Commands
 Commands are prefixed with a character defined by the config value `command_prefix`, by default `"!"`, so the command `pug` becomes `!pug` in the Discord chat, and so on.
+* `clearpuggers` — Empty the PUG queue. Command access can be restricted by role(s) with the config value `pug_admin_role_name`.
 * `ping` — Bot will simply respond with "Pong". Use to test if the bot is still online and responsive.
+* `ping_puggers` — Ping all the players currently in the PUG queue. Can be used to manually organize games with smaller than expected number of players. Expects a message after the command, eg: `!ping_puggers Play 4v4?`
 * `pug` — Join the PUG queue if there is room.
-* `unpug` — Leave the PUG queue.
 * `puggers` — List players currently in the PUG queue.
 * `scramble` — Suggest randomly scrambled teams for the last full PUG for balancing reasons. Can be repeated until a satisfactory scramble is reached.
-* `clearpuggers` — Empty the PUG queue. Command access can be restricted by role(s) with the config value `pug_admin_role_name`.
-* `ping_puggers` — Ping all the players currently in the PUG queue. Can be used to manually organize games with smaller than expected number of players. Expects a message after the command, eg: `!ping_puggers Play 4v4?`
+* `unpug` — Leave the PUG queue.
 
 ### Config values
 The config values have been documented as comments in the [config.yml file](config.yml) itself.
