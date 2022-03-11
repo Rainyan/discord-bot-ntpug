@@ -15,6 +15,7 @@ Commands are prefixed with a character defined by the config value `command_pref
 * `puggers` — List players currently in the PUG queue.
 * `scramble` — Suggest randomly scrambled teams for the last full PUG for balancing reasons. Can be repeated until a satisfactory scramble is reached.
 * `clearpuggers` — Empty the PUG queue. Command access can be restricted by role(s) with the config value `pug_admin_role_name`.
+* `ping_puggers` — Ping all the players currently in the PUG queue. Can be used to manually organize games with smaller than expected number of players. Expects a message after the command, eg: `!ping_puggers Play 4v4?`
 
 ### Config values
 The config values have been documented as comments in the [config.yml file](config.yml) itself.
