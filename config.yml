@@ -2,54 +2,54 @@
 # Alternatively, you can set the OS environment variable DISCORD_BOT_TOKEN,
 # which will take precedence over this config value.
 # For info on how to generate this token, please see: https://discord.com/developers/docs
-bot_secret_token: ""
+NTBOT_SECRET_TOKEN: ""
 
 # The first character of commands, for example "!" for "!pug"
-command_prefix: "!"
+NTBOT_CMD_PREFIX: "!"
 
 # Name of the Discord server channel that the bot listens to.
 # This value has to be an exact match.
-pug_channel_name: pug-queue
+NTBOT_PUG_CHANNEL: pug-queue
 
 # Number of players, total, that are required for a PUG match.
 # For example, 10 for a 5v5. Needs to be an even number.
-num_players_required_total: 10
+NTBOT_PLAYERS_REQUIRED_TOTAL: 10
 
 # Debug command. Whether to allow the same player to repeatedly queue to fill up >1 slots,
 # for bot testing purposes.
-debug_allow_requeue: False
+NTBOT_DEBUG_ALLOW_REQUEUE: False
 
 # How often (in seconds) to check if there's enough players pugged up to start
 # playing.
-queue_polling_interval_secs: 5
+NTBOT_POLLING_INTERVAL_SECS: 5
 
-# How often (in seconds) to update the bot's "presence" status message,
+# How often (in seconds) to update the bot's Discord "presence" status message,
 # displaying current amount of queued players next to the bot's nickname.
-discord_presence_update_interval_secs: 30
+NTBOT_PRESENCE_INTERVAL_SECS: 30
 
 # Name of the puggers role. Used for pinging.
-pugger_role_name: Puggers
+NTBOT_PUGGER_ROLE: Puggers
 
 # Threshold, in range of 0.0-1.0, of how many queued players are required
 # for the bot to auto-ping the pugger role.
-pugger_role_ping_threshold: 0.5
+NTBOT_PUGGER_ROLE_PING_THRESHOLD: 0.5
 
 # How long to wait, in hours, between role pings at a minimum.
-pugger_role_min_ping_interval_hours: 4.0
+NTBOT_PUGGER_ROLE_PING_MIN_INTERVAL_HOURS: 4.0
 
 # How many previous PUG channel messages to check, at most, for a previous pugger role ping.
-pugger_role_ping_max_history: 120
+NTBOT_PUGGER_ROLE_PING_MAX_HISTORY: 120
 
 # List of 0 or more names of the pug maintainer roles.
 # If any user should be able to do pug queue admin tasks, use an empty value.
-pug_admin_role_name:
+NTBOT_PUG_ADMIN_ROLES:
     - Admins
     - Moderators
 
 # How long to keep idle puggers in the queue before automatically un-queueing them,
 # in full hours. Has to be a positive integer.
-restore_puggers_limit_hours: 16
+NTBOT_IDLE_THRESHOLD_HOURS: 16
 
 # How often can PUG queuers bulk-ping all the other players currently in the queue, in seconds.
 # Admins with roles defined by "pug_admin_role_name" are not affected by this time limit.
-ping_puggers_cooldown_secs: 600.0
+NTBOT_PING_PUGGERS_COOLDOWN_SECS: 600.0
