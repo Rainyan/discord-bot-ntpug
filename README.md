@@ -9,12 +9,13 @@ Discord bot for organizing PUGs (pick-up games). Built for Neotokyo, but should 
 # Usage
 ### Commands
 Commands are prefixed with a character defined by the config value `command_prefix`, by default `"!"`, so the command `pug` becomes `!pug` in the Discord chat, and so on.
+* `clearpuggers` — Empty the PUG queue. Command access can be restricted by role(s) with the config value `pug_admin_role_name`.
 * `ping` — Bot will simply respond with "Pong". Use to test if the bot is still online and responsive.
+* `ping_puggers` — Ping all the players currently in the PUG queue. Can be used to manually organize games with smaller than expected number of players. Expects a message after the command, eg: `!ping_puggers Play 4v4?`
 * `pug` — Join the PUG queue if there is room.
-* `unpug` — Leave the PUG queue.
 * `puggers` — List players currently in the PUG queue.
 * `scramble` — Suggest randomly scrambled teams for the last full PUG for balancing reasons. Can be repeated until a satisfactory scramble is reached.
-* `clearpuggers` — Empty the PUG queue. Command access can be restricted by role(s) with the config value `pug_admin_role_name`.
+* `unpug` — Leave the PUG queue.
 
 ### Config values
 The config values have been documented as comments in the [config.yml file](config.yml) itself.
@@ -51,9 +52,9 @@ python bot.py
 Check the issues to see if your problem has already been reported. If not, feel free to open a new issue.
 
 # Contributing
-Pull requests are welcome! Please target the `main` branch for your edits.
+Pull requests are welcome! Please target the `main` branch for your edits. Also consider tagging yourself in the relevant issue ticket, or creating a new issue for your feature if it doesn't exist yet, to avoid conflicting updates.
 
-This project complies to [PEP 8](https://www.python.org/dev/peps/pep-0008/) and [pylint defaults](https://pypi.org/project/pylint/); it's recommended to test your final code submission:
+This project complies to [PEP 8](https://www.python.org/dev/peps/pep-0008/) and [pylint defaults](https://pypi.org/project/pylint/); it's recommended to test your final code before submission:
 ```sh
 python -m pip install --upgrade pip
 

@@ -7,13 +7,16 @@ bot_secret_token: ""
 # The first character of commands, for example "!" for "!pug"
 command_prefix: "!"
 
-# Name of the Discord server channel that the bot listens to
+# Name of the Discord server channel that the bot listens to.
+# This value has to be an exact match.
 pug_channel_name: pug-queue
 
 # Number of players, total, that are required for a PUG match.
+# For example, 10 for a 5v5. Needs to be an even number.
 num_players_required_total: 10
 
-# Debug command. Allows the same player to repeatedly queue to fill up >1 slots.
+# Debug command. Whether to allow the same player to repeatedly queue to fill up >1 slots,
+# for bot testing purposes.
 debug_allow_requeue: False
 
 # How often (in seconds) to check if there's enough players pugged up to start
@@ -24,7 +27,7 @@ queue_polling_interval_secs: 5
 # displaying current amount of queued players next to the bot's nickname.
 discord_presence_update_interval_secs: 30
 
-# Name of the puggers role
+# Name of the puggers role. Used for pinging.
 pugger_role_name: Puggers
 
 # Threshold, in range of 0.0-1.0, of how many queued players are required
@@ -43,9 +46,10 @@ pug_admin_role_name:
     - Admins
     - Moderators
 
-# How long to keep idle puggers in the queue before automatically un-queueing them.
+# How long to keep idle puggers in the queue before automatically un-queueing them,
+# in full hours. Has to be a positive integer.
 restore_puggers_limit_hours: 16
 
 # How often can PUG queuers bulk-ping all the other players currently in the queue, in seconds.
-# Admin roles defined by "pug_admin_role_name" are not affected by this limit.
+# Admins with roles defined by "pug_admin_role_name" are not affected by this time limit.
 ping_puggers_cooldown_secs: 600.0
