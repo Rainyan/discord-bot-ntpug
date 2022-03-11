@@ -60,7 +60,7 @@ from strictyaml import load, Bool, EmptyList, Float, Int, Map, Seq, Str
 assert discord.version_info.major == 1 and discord.version_info.minor == 7
 
 SCRIPT_NAME = "NT Pug Bot"
-SCRIPT_VERSION = "0.11.0"
+SCRIPT_VERSION = "0.11.1"
 
 CFG_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                         "config.yml")
