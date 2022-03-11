@@ -204,7 +204,14 @@ class PugStatus():
         # First reset the PUG queue, and then replay the pug/unpug traffic
         # within the acceptable "restore_puggers_limit_hours" history range.
         await self.reset()
-        async for msg in self.guild_channel.history(after=after,
+        # We remove the default max retrieved messages history limit because
+        # we need to always retrieve the full order of events here. This can
+        # be a slow operation if the channel is heavily congested within the
+        # "now-after" search range, but it's acceptable here because this code
+        # only runs on bot init, and then once per clear_inactive_puggers()
+        # task loop period, which is at most once per hour.
+        async for msg in self.guild_channel.history(limit=None,
+                                                    after=after,
                                                     oldest_first=True).\
                 filter(predicate):
             if is_pug_start(msg):
