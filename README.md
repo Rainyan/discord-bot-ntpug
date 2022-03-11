@@ -54,7 +54,7 @@ Check the issues to see if your problem has already been reported. If not, feel 
 # Contributing
 Pull requests are welcome! Please target the `main` branch for your edits. Also consider tagging yourself in the relevant issue ticket, or creating a new issue for your feature if it doesn't exist yet, to avoid conflicting updates.
 
-This project complies to [PEP 8](https://www.python.org/dev/peps/pep-0008/) and [pylint defaults](https://pypi.org/project/pylint/); it's recommended to test your final code submission:
+This project complies to [PEP 8](https://www.python.org/dev/peps/pep-0008/) and [pylint defaults](https://pypi.org/project/pylint/); it's recommended to test your final code before submission:
 ```sh
 python -m pip install --upgrade pip
 
