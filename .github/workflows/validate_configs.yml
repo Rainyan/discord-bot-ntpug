@@ -1,9 +1,11 @@
-name: "Validate configs"
+name: Validate configs
 
 on:
   push:
     branches: [ main ]
-    paths: "**.json"
+    paths:
+      - '**.json'
+      - '.github/workflows/validate_configs.yml'
   pull_request:
     branches: [ main ]
 
