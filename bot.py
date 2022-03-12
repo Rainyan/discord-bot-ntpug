@@ -40,6 +40,7 @@
        https://github.com/Rainyan/discord-bot-ntpug
 """
 
+from ast import literal_eval
 import asyncio
 from datetime import datetime, timezone
 import os
@@ -88,16 +89,11 @@ assert CFG is not None
 
 def cfg(key):
     """Returns a bot config value from environment variable or config file,
-       in that order. If using an env var, its format has to be compatible
-       with the type determined by the config file strictyaml schema.
+       in that order. If using an env var, its format has to be constructible
+       to the type determined by the config file's strictyaml schema.
     """
     if os.environ.get(key):
-        print(f"Returning env var \"{key}\": "
-              f"\"{type(CFG[key].value)(os.environ.get(key))}\" "
-              f"as type: {type(CFG[key].value)}")
-        return type(CFG[key].value)(os.environ.get(key))
-    print(f"Returning cfg var \"{key}\": "
-          f"\"{CFG[key].value}\" as type: {type(CFG[key].value)}")
+        return type(CFG[key].value)(literal_eval(os.environ.get(key)))
     return CFG[key].value
 
 
