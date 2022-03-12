@@ -40,6 +40,7 @@
        https://github.com/Rainyan/discord-bot-ntpug
 """
 
+from ast import literal_eval
 import asyncio
 from datetime import datetime, timezone
 import os
@@ -60,41 +61,53 @@ from strictyaml import load, Bool, EmptyList, Float, Int, Map, Seq, Str
 assert discord.version_info.major == 1 and discord.version_info.minor == 7
 
 SCRIPT_NAME = "NT Pug Bot"
-SCRIPT_VERSION = "0.11.1"
+SCRIPT_VERSION = "0.12.0"
 
 CFG_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                         "config.yml")
 assert os.path.isfile(CFG_PATH)
 with open(file=CFG_PATH, mode="r", encoding="utf-8") as f_config:
     YAML_CFG_SCHEMA = Map({
-        "bot_secret_token": Str(),
-        "command_prefix": Str(),
-        "pug_channel_name": Str(),
-        "num_players_required_total": Int(),
-        "debug_allow_requeue": Bool(),
-        "queue_polling_interval_secs": Int(),
-        "discord_presence_update_interval_secs": Int(),
-        "pugger_role_name": Str(),
-        "pugger_role_ping_threshold": Float(),
-        "pugger_role_min_ping_interval_hours": Float(),
-        "pugger_role_ping_max_history": Int(),
-        "pug_admin_role_name": Seq(Str()) | EmptyList(),
-        "restore_puggers_limit_hours": Int(),
-        "ping_puggers_cooldown_secs": Float(),
+        "NTBOT_SECRET_TOKEN": Str(),
+        "NTBOT_CMD_PREFIX": Str(),
+        "NTBOT_PUG_CHANNEL": Str(),
+        "NTBOT_PLAYERS_REQUIRED_TOTAL": Int(),
+        "NTBOT_DEBUG_ALLOW_REQUEUE": Bool(),
+        "NTBOT_POLLING_INTERVAL_SECS": Int(),
+        "NTBOT_PRESENCE_INTERVAL_SECS": Int(),
+        "NTBOT_PUGGER_ROLE": Str(),
+        "NTBOT_PUGGER_ROLE_PING_THRESHOLD": Float(),
+        "NTBOT_PUGGER_ROLE_PING_MIN_INTERVAL_HOURS": Float(),
+        "NTBOT_PUGGER_ROLE_PING_MAX_HISTORY": Int(),
+        "NTBOT_PUG_ADMIN_ROLES": Seq(Str()) | EmptyList(),
+        "NTBOT_IDLE_THRESHOLD_HOURS": Int(),
+        "NTBOT_PING_PUGGERS_COOLDOWN_SECS": Float(),
     })
     CFG = load(f_config.read(), YAML_CFG_SCHEMA)
 assert CFG is not None
 
-bot = commands.Bot(command_prefix=CFG["command_prefix"].value)
-NUM_PLAYERS_REQUIRED = CFG["num_players_required_total"].value
+
+def cfg(key):
+    """Returns a bot config value from environment variable or config file,
+       in that order. If using an env var, its format has to be constructible
+       to the type determined by the config file's strictyaml schema.
+    """
+    if os.environ.get(key):
+        return type(CFG[key].value)(literal_eval(os.environ.get(key)))
+    return CFG[key].value
+
+
+bot = commands.Bot(command_prefix=cfg("NTBOT_CMD_PREFIX"))
+NUM_PLAYERS_REQUIRED = cfg("NTBOT_PLAYERS_REQUIRED_TOTAL")
 assert NUM_PLAYERS_REQUIRED > 0, "Need positive number of players"
 assert NUM_PLAYERS_REQUIRED % 2 == 0, "Need even number of players"
-DEBUG_ALLOW_REQUEUE = CFG["debug_allow_requeue"].value
-PUG_CHANNEL_NAME = CFG["pug_channel_name"].value
-BOT_SECRET_TOKEN = os.environ.get("DISCORD_BOT_TOKEN") or \
-    CFG["bot_secret_token"].value
-assert CFG["pugger_role_ping_threshold"].value >= 0 and \
-    CFG["pugger_role_ping_threshold"].value <= 1
+DEBUG_ALLOW_REQUEUE = cfg("NTBOT_DEBUG_ALLOW_REQUEUE")
+PUG_CHANNEL_NAME = cfg("NTBOT_PUG_CHANNEL")
+BOT_SECRET_TOKEN = cfg("NTBOT_SECRET_TOKEN")
+assert 0 <= cfg("NTBOT_PUGGER_ROLE_PING_THRESHOLD") <= 1
+PUGGER_ROLE_NAME = cfg("NTBOT_PUGGER_ROLE")
+assert len(PUGGER_ROLE_NAME) > 0
+
 
 # This is a variable because the text used for detecting previous PUGs when
 # restoring status during restart.
@@ -140,7 +153,7 @@ class PugStatus():
                     (player in self.jin_players or player in self.nsf_players):
                 return False, (f"{player.mention} You are already queued! "
                                "If you wanted to un-PUG, please use **"
-                               f"{CFG['command_prefix'].value}unpug** "
+                               f"{bot.command_prefix}unpug** "
                                "instead.")
             if team is None:
                 team = random.randint(0, 1)  # flip a coin between jin/nsf
@@ -158,24 +171,19 @@ class PugStatus():
         """Iterate PUG channel's recent message history to figure out who
            should be pugged. This is used both for restoring puggers after a
            bot restart, but also for dropping inactive players from the queue
-           after inactivity of "restore_puggers_limit_hours" period.
+           after inactivity of "NTBOT_IDLE_THRESHOLD_HOURS" period.
         """
-        assert CFG["restore_puggers_limit_hours"].value > 0
-        after = pendulum.now().subtract(
-            hours=CFG["restore_puggers_limit_hours"].value)
+        limit_hrs = cfg("NTBOT_IDLE_THRESHOLD_HOURS")
+        assert limit_hrs > 0
+        after = pendulum.now().subtract(hours=limit_hrs)
         # Because Pycord 1.7.3 wants non timezone aware "after" date.
         after = datetime.fromisoformat(after.in_timezone("UTC").isoformat())
         after = after.replace(tzinfo=None)
 
-        def is_pug_cmd(msg):
-            """Predicate for PUG join chat commands.
+        def is_cmd(msg, cmd):
+            """Predicate for checking if message equals a command.
             """
-            return msg.content == f"{CFG['command_prefix'].value}pug"
-
-        def is_unpug_cmd(msg):
-            """Predicate for PUG un-join chat commands.
-            """
-            return msg.content == f"{CFG['command_prefix'].value}unpug"
+            return msg.content == f"{bot.command_prefix}{cmd}"
 
         def is_pug_start(msg):
             """Predicate for PUG start.
@@ -186,17 +194,25 @@ class PugStatus():
             """Combined predicate for filtering the message history for
                enumeration.
             """
-            return is_pug_cmd(msg) or is_unpug_cmd(msg) or is_pug_start(msg)
+            return (is_cmd(msg, "pug") or is_cmd(msg, "unpug")
+                    or is_pug_start(msg))
 
         # First reset the PUG queue, and then replay the pug/unpug traffic
         # within the acceptable "restore_puggers_limit_hours" history range.
         await self.reset()
-        async for msg in self.guild_channel.history(after=after,
+        # We remove the default max retrieved messages history limit because
+        # we need to always retrieve the full order of events here. This can
+        # be a slow operation if the channel is heavily congested within the
+        # "now-after" search range, but it's acceptable here because this code
+        # only runs on bot init, and then once per clear_inactive_puggers()
+        # task loop period, which is at most once per hour.
+        async for msg in self.guild_channel.history(limit=None,
+                                                    after=after,
                                                     oldest_first=True).\
                 filter(predicate):
             if is_pug_start(msg):
                 await self.reset()
-            elif is_pug_cmd(msg):
+            elif is_cmd(msg, "pug"):
                 await self.player_join(msg.author)
             else:
                 await self.player_leave(msg.author)
@@ -253,7 +269,7 @@ class PugStatus():
                 msg += f"{player.mention}, "
             msg = msg[:-2]  # trailing ", "
             msg += ("\n\nTeams unbalanced? Use **"
-                    f"{CFG['command_prefix'].value}scramble** to suggest new "
+                    f"{bot.command_prefix}scramble** to suggest new "
                     "random teams.")
             return True, msg
 
@@ -263,8 +279,8 @@ class PugStatus():
         """
         async with self.lock:
             delta_time = int(time.time()) - self.last_changed_presence
-            if delta_time < \
-                    CFG["discord_presence_update_interval_secs"].value + 2:
+
+            if delta_time < cfg("NTBOT_PRESENCE_INTERVAL_SECS") + 2:
                 return
 
             presence = self.last_presence
@@ -306,18 +322,17 @@ class PugStatus():
         """Returns a datetime.timedelta of latest role ping, or None if no such
            ping was found.
         """
-        history_limit = CFG["pugger_role_ping_max_history"].value
+        history_limit = cfg("NTBOT_PUGGER_ROLE_PING_MAX_HISTORY")
         assert history_limit >= 0
         after = pendulum.now().subtract(
-            hours=CFG["pugger_role_min_ping_interval_hours"].value)
+            hours=cfg("NTBOT_PUGGER_ROLE_PING_MIN_INTERVAL_HOURS"))
         # Because Pycord 1.7.3 wants non timezone aware "after" date.
         after = datetime.fromisoformat(after.in_timezone("UTC").isoformat())
         after = after.replace(tzinfo=None)
         async for msg in self.guild_channel.history(limit=history_limit,
                                                     after=after,
                                                     oldest_first=False):
-            if CFG["pugger_role_name"].value in \
-                    [role.name for role in msg.role_mentions]:
+            if PUGGER_ROLE_NAME in [role.name for role in msg.role_mentions]:
                 # Because Pycord 1.7.3 returns non timezone aware UTC date,
                 # and we need to subtract a timedelta using it.
                 naive_utc_now = datetime.now(timezone.utc).replace(tzinfo=None)
@@ -333,20 +348,19 @@ class PugStatus():
                 return
 
             last_ping_dt = await self.role_ping_deltatime()
-            hours_limit = CFG["pugger_role_min_ping_interval_hours"].value
+            hours_limit = cfg("NTBOT_PUGGER_ROLE_PING_MIN_INTERVAL_HOURS")
             if last_ping_dt is not None:
                 last_ping_hours = last_ping_dt.total_seconds() / 60 / 60
                 if last_ping_hours < hours_limit:
                     return
 
             pugger_ratio = self.num_queued() / self.num_expected()
-            ping_ratio = CFG["pugger_role_ping_threshold"].value
+            ping_ratio = cfg("NTBOT_PUGGER_ROLE_PING_THRESHOLD")
             if pugger_ratio < ping_ratio:
                 return
 
-            pugger_role = CFG["pugger_role_name"].value
             for role in self.guild_roles:
-                if role.name == pugger_role:
+                if role.name == PUGGER_ROLE_NAME:
                     min_nag_hours = f"{hours_limit:.1f}"
                     min_nag_hours = min_nag_hours.rstrip("0").rstrip(".")
                     msg = (f"{role.mention} Need **"
@@ -416,10 +430,10 @@ async def clearpuggers(ctx):
         return
 
     # If zero pug admin roles are configured, assume anyone can !clearpuggers
-    if len(CFG["pug_admin_role_name"]) == 0:
+    if len(cfg("NTBOT_PUG_ADMIN_ROLES")) == 0:
         is_allowed = True
     else:
-        pug_admin_roles = [role.value for role in CFG["pug_admin_role_name"]]
+        pug_admin_roles = [role.value for role in cfg("NTBOT_PUG_ADMIN_ROLES")]
         user_roles = [role.name for role in ctx.message.author.roles]
         is_allowed = any(role in pug_admin_roles for role in user_roles)
 
@@ -454,8 +468,7 @@ async def scramble(ctx):
             msg += f"{pug_guilds[ctx.guild].prev_puggers[i].name}, "
         msg = msg[:-2]  # trailing ", "
         msg += ("\n\nTeams still unbalanced? Use **"
-                f"{CFG['command_prefix'].value}"
-                "scramble** to suggest new random teams.")
+                f"{bot.command_prefix}scramble** to suggest new random teams.")
     await ctx.send(msg)
 
 
@@ -480,7 +493,7 @@ async def puggers(ctx):
     await ctx.send(msg)
 
 
-@commands.cooldown(rate=1, per=CFG["ping_puggers_cooldown_secs"].value,
+@commands.cooldown(rate=1, per=cfg("NTBOT_PING_PUGGERS_COOLDOWN_SECS"),
                    type=commands.BucketType.user)
 @bot.command(brief="Ping all players currently queueing for PUG")
 async def ping_puggers(ctx):
@@ -491,7 +504,7 @@ async def ping_puggers(ctx):
         ping_puggers.reset_cooldown(ctx)
         return
 
-    pug_admin_roles = [role.value for role in CFG["pug_admin_role_name"]]
+    pug_admin_roles = [role.value for role in cfg("NTBOT_PUG_ADMIN_ROLES")]
     user_roles = [role.name for role in ctx.message.author.roles]
     is_admin = any(role in pug_admin_roles for role in user_roles)
 
@@ -604,7 +617,7 @@ class PugQueueCog(commands.Cog):
         self.poll_queue.start()
         self.clear_inactive_puggers.start()
 
-    @tasks.loop(seconds=CFG["queue_polling_interval_secs"].value)
+    @tasks.loop(seconds=cfg("NTBOT_POLLING_INTERVAL_SECS"))
     async def poll_queue(self):
         """Poll the PUG queue to see if we're ready to play,
            and to possibly update our status in various ways.
