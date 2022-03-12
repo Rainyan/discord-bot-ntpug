@@ -12,7 +12,7 @@
   "repository": "https://github.com/Rainyan/discord-bot-ntpug",
   "env": {
     "NTBOT_SECRET_TOKEN": {
-      "description": "Discord bot API secret token. For info on how to generate this, please see: https://discord.com/developers/docs. Please note that the string value must be enclosed in quotes, eg: \"api-key-here\"
+      "description": "Discord bot API secret token. For info on how to generate this, please see: https://discord.com/developers/docs. Please note that the string value must be enclosed in quotes, eg: \"api-key-here\""
     },
     "NTBOT_PUG_CHANNEL": {
       "description": "Name of the Discord server channel that the bot listens to. This value has to be an exact match of the channel name.",
