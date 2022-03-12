@@ -8,7 +8,7 @@ NTBOT_SECRET_TOKEN: ""
 NTBOT_CMD_PREFIX: "!"
 
 # Name of the Discord server channel that the bot listens to.
-# This value has to be an exact match.
+# This value has to be an exact match of the channel name.
 NTBOT_PUG_CHANNEL: pug-queue
 
 # Number of players, total, that are required for a PUG match.
