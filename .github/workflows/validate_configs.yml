@@ -2,7 +2,7 @@ name: Validate configs
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, validate_json ]
     paths:
       - '**.json'
       - '.github/workflows/validate_configs.yml'
@@ -19,4 +19,3 @@ jobs:
         env:
           INPUT_SCHEMA: schemata/json.json
           INPUT_JSONS: app.json
-
