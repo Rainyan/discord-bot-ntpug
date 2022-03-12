@@ -33,8 +33,10 @@
       }
     },
     "addons": {
-      "type": "array",
-      "items": { "type": "string" }
+      "type": "object",
+      "patternProperties": {
+        "plan": { "type": "string" }
+      }
     }
   }
 }
