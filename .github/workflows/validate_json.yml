@@ -1,4 +1,4 @@
-name: Validate configs
+name: JSON validation
 
 on:
   push:
