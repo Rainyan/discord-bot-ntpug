@@ -7,8 +7,10 @@
     "website": { "type": "string" },
     "repository": { "type": "string" },
     "env": {
-      "type": "array",
-      "items": { "type": "string" }
+      "type": "object",
+      "patternProperties": {
+        "(.*?)": { "type": "string" }
+      }
     },
     "formation": {
       "type": "object",
