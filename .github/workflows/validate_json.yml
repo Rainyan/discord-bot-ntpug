@@ -5,7 +5,7 @@ on:
     branches: [ main ]
     paths:
       - '**.json'
-      - '.github/workflows/validate_configs.yml'
+      - '.github/workflows/validate_json.yml'
   pull_request:
     branches: [ main ]
 
