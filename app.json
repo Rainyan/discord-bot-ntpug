@@ -68,11 +68,9 @@
   "addons": [
     {
       "plan": "librato:development",
-      "as": "Perf"
     },
     {
       "plan": "papertrail:choklad",
-      "as": "Logs"
     }
   ]
 }
