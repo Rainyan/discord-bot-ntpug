@@ -12,11 +12,11 @@
   "repository": "https://github.com/Rainyan/discord-bot-ntpug",
   "env": {
     "NTBOT_SECRET_TOKEN": {
-      "description": "Discord bot API secret token. For info on how to generate this, please see: https://discord.com/developers/docs"
+      "description": "Discord bot API secret token. For info on how to generate this, please see: https://discord.com/developers/docs. Please note that the string value must be enclosed in quotes, eg: \"api-key-here\""
     },
     "NTBOT_PUG_CHANNEL": {
       "description": "Name of the Discord server channel that the bot listens to. This value has to be an exact match of the channel name.",
-      "value": "pug-queue"
+      "value": "\"pug-queue\""
     },
     "NTBOT_PLAYERS_REQUIRED_TOTAL": {
       "description": "Number of players, total, that are required for a PUG match. For example, 10 for a 5v5. Needs to be an even number.",
@@ -32,7 +32,7 @@
     },
     "NTBOT_PUGGER_ROLE": {
       "description": "Name of the puggers role. Used for pinging.",
-      "value": "Puggers"
+      "value": "\"Puggers\""
     },
     "NTBOT_PUGGER_ROLE_PING_THRESHOLD": {
       "description": "Threshold, in range of 0.0-1.0, of how many queued players are required for the bot to auto-ping the pugger role.",
@@ -48,7 +48,7 @@
     },
     "NTBOT_PUG_ADMIN_ROLES": {
       "description": "List of 0 or more names of the pug maintainer roles. If any user should be able to do pug queue admin tasks, use an empty list: []",
-      "value": "['Admins', 'Moderators']"
+      "value": "[\"Admins\", \"Moderators\"]"
     },
     "NTBOT_IDLE_THRESHOLD_HOURS": {
       "description": "How long to keep idle puggers in the queue before automatically un-queueing them, in full hours. Has to be a positive integer.",
@@ -64,5 +64,15 @@
       "quantity": 1,
       "size": "free"
     }
-  }
+  },
+  "addons": [
+    {
+      "plan": "librato:Development",
+      "as": "Perf"
+    },
+    {
+      "plan": "papertrail:Choklad",
+      "as": "Logs"
+    }
+  ]
 }
