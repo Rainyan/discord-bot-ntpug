@@ -1,9 +1,9 @@
-name: Validate configs
+name: "Validate configs"
 
 on:
   push:
     branches: [ main ]
-    paths: **.json
+    paths: "**.json"
   pull_request:
     branches: [ main ]
 
