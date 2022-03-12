@@ -9,7 +9,12 @@
     "env": {
       "type": "object",
       "patternProperties": {
-        "(.*?)": { "type": "string" }
+        "(.*?)": {
+          "type": "object",
+          "patternProperties": {
+            "(.*?)": { "type": "string" }
+          }
+        }
       }
     },
     "formation": {
