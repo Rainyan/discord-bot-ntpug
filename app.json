@@ -47,7 +47,7 @@
       "value": "120"
     },
     "NTBOT_PUG_ADMIN_ROLES": {
-      "description": "List of 0 or more names of the pug maintainer roles. If any user should be able to do pug queue admin tasks, use an empty value.",
+      "description": "List of 0 or more names of the pug maintainer roles. If any user should be able to do pug queue admin tasks, use an empty list: []",
       "value": "['Admins', 'Moderators']"
     },
     "NTBOT_IDLE_THRESHOLD_HOURS": {
