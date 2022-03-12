@@ -1,0 +1,33 @@
+{
+  "type": "object",
+  "properties": {
+    "name": { "type": "string" },
+    "description": { "type": "string" },
+    "keywords": { "type": "array" },
+    "website": { "type": "string" },
+    "repository": { "type": "string" },
+    "env": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "formation": {
+      "type": "object",
+      "properties": {
+        "worker": {
+          "type": "object",
+          "properties": {
+            "quantity": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "size": { "type": "string" }
+          }
+        }
+      }
+    },
+    "addons": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  }
+}
