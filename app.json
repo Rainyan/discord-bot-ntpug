@@ -64,5 +64,15 @@
       "quantity": 1,
       "size": "free"
     }
-  }
+  },
+  "addons": [
+    {
+      "plan": "librato:Development",
+      "as": "Perf"
+    },
+    {
+      "plan": "papertrail:Choklad",
+      "as": "Logs"
+    }
+  ]
 }
