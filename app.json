@@ -60,7 +60,9 @@
     }
   },
   "formation": {
-    "quantity": 1,
-    "size": "free"
+    "worker": {
+      "quantity": 1,
+      "size": "free"
+    }
   }
 }
