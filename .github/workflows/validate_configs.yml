@@ -19,3 +19,4 @@ jobs:
         env:
           INPUT_SCHEMA: schemata/json.json
           INPUT_JSONS: app.json
+
