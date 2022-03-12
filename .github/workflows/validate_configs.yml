@@ -1,0 +1,21 @@
+name: Validate configs
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - '**.json'
+      - '.github/workflows/validate_configs.yml'
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  validate-configs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - name: Validate JSON
+        uses: docker://orrosenblatt/validate-json-action:latest
+        env:
+          INPUT_SCHEMA: schemata/json.json
+          INPUT_JSONS: app.json
