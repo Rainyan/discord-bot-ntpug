@@ -7,12 +7,12 @@
    Usage:
      Commands:
        Commands are prefixed with a character defined by the config value
-       "command_prefix", by default "!", so the command pug becomes "!pug" in
+       "NTBOT_CMD_PREFIX", by default "!", so the command pug becomes "!pug" in
        the Discord chat, and so on.
 
        - clearpuggers — Empty the PUG queue.
                         Command access can be restricted by role(s) with the
-                        config value pug_admin_role_name.
+                        config value NTBOT_PUG_ADMIN_ROLES.
 
        - ping         — Bot will simply respond with "Pong". Use to test if
                         the bot is still online and responsive.
