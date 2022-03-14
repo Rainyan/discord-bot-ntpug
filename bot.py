@@ -61,7 +61,7 @@ from strictyaml import load, Bool, EmptyList, Float, Int, Map, Seq, Str
 assert discord.version_info.major == 1 and discord.version_info.minor == 7
 
 SCRIPT_NAME = "NT Pug Bot"
-SCRIPT_VERSION = "0.12.0"
+SCRIPT_VERSION = "0.13.0"
 
 CFG_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                         "config.yml")
@@ -78,7 +78,6 @@ with open(file=CFG_PATH, mode="r", encoding="utf-8") as f_config:
         "NTBOT_PUGGER_ROLE": Str(),
         "NTBOT_PUGGER_ROLE_PING_THRESHOLD": Float(),
         "NTBOT_PUGGER_ROLE_PING_MIN_INTERVAL_HOURS": Float(),
-        "NTBOT_PUGGER_ROLE_PING_MAX_HISTORY": Int(),
         "NTBOT_PUG_ADMIN_ROLES": Seq(Str()) | EmptyList(),
         "NTBOT_IDLE_THRESHOLD_HOURS": Int(),
         "NTBOT_PING_PUGGERS_COOLDOWN_SECS": Float(),
@@ -134,6 +133,7 @@ class PugStatus():
         self.last_changed_presence = 0
         self.last_presence = None
         self.lock = asyncio.Lock()
+        self.last_role_ping = None
 
     async def reset(self):
         """Stores the previous puggers, and then resets current pugger queue.
@@ -322,20 +322,25 @@ class PugStatus():
         """Returns a datetime.timedelta of latest role ping, or None if no such
            ping was found.
         """
-        history_limit = cfg("NTBOT_PUGGER_ROLE_PING_MAX_HISTORY")
-        assert history_limit >= 0
         after = pendulum.now().subtract(
             hours=cfg("NTBOT_PUGGER_ROLE_PING_MIN_INTERVAL_HOURS"))
         # Because Pycord 1.7.3 wants non timezone aware "after" date.
         after = datetime.fromisoformat(after.in_timezone("UTC").isoformat())
         after = after.replace(tzinfo=None)
-        async for msg in self.guild_channel.history(limit=history_limit,
+
+        # Need to do this weird conversion for the history limit param because
+        # it gets compared to an int inside the Pycord 1.7.3 iterator, which
+        # is incompatible with datetime.datetime for equality comparison.
+        limit = int(after.timestamp())
+
+        async for msg in self.guild_channel.history(limit=limit,
                                                     after=after,
                                                     oldest_first=False):
             if PUGGER_ROLE_NAME in [role.name for role in msg.role_mentions]:
                 # Because Pycord 1.7.3 returns non timezone aware UTC date,
                 # and we need to subtract a timedelta using it.
                 naive_utc_now = datetime.now(timezone.utc).replace(tzinfo=None)
+                self.last_role_ping = msg.created_at
                 return naive_utc_now - msg.created_at
         return None
 
