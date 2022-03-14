@@ -37,9 +37,6 @@ NTBOT_PUGGER_ROLE_PING_THRESHOLD: 0.5
 # How long to wait, in hours, between role pings at a minimum.
 NTBOT_PUGGER_ROLE_PING_MIN_INTERVAL_HOURS: 4.0
 
-# How many previous PUG channel messages to check, at most, for a previous pugger role ping.
-NTBOT_PUGGER_ROLE_PING_MAX_HISTORY: 120
-
 # List of 0 or more names of the pug maintainer roles.
 # If any user should be able to do pug queue admin tasks, use an empty value.
 NTBOT_PUG_ADMIN_ROLES:
