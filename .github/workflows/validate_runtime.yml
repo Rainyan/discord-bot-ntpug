@@ -2,7 +2,7 @@ name: runtime validation
 
 on:
   push:
-    branches: [ main, validate_runtime ]
+    branches: [ main ]
     paths:
       - 'runtime.txt'
       - '.github/workflows/validate_runtime.yml'
