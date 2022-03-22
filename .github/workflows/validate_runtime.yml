@@ -1,0 +1,34 @@
+name: runtime validation
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'runtime.txt'
+      - '.github/workflows/validate_runtime.yml'
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  validate-runtime:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install requirements
+        run: pip install semver
+      - name: Validate runtime.txt
+        run: |
+          #!/usr/bin/env python3
+          
+          import semver
+          
+          with open("runtime.txt") as f:
+              lines = f.readlines()
+          assert len(lines) == 1
+          line = lines[0].strip()
+          assert line.startswith("python-")
+          
+          runtime_ver = semver.VersionInfo.parse(line[len("python-"):])
+          python_eol_limit = semver.VersionInfo.parse("3.7.0")
+          assert runtime_ver >= python_eol_limit
+        shell: python
