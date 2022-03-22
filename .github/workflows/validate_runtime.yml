@@ -29,6 +29,8 @@ jobs:
           assert line.startswith("python-")
           
           runtime_ver = semver.VersionInfo.parse(line[len("python-"):])
+          assert runtime_ver.major == 3
+          
           python_eol_limit = semver.VersionInfo.parse("3.7.0")
           assert runtime_ver >= python_eol_limit
         shell: python
