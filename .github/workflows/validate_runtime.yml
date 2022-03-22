@@ -19,11 +19,15 @@ jobs:
       - name: Validate runtime.txt
         run: |
           #!/usr/bin/env python3
+          
+          import semver
+          
           with open("runtime.txt") as f:
               lines = f.readlines()
           assert len(lines) == 1
           line = lines[0].strip()
           assert line.startswith("python-")
+          
           semver = semver.VersionInfo.parse(line[len("python-"):])
           python_eol_limit = semver.VersionInfo.parse("3.7.0")
           assert semver >= python_eol_limit
