@@ -51,6 +51,7 @@ import discord
 from discord.ext import commands, tasks
 import pendulum
 from strictyaml import load, Bool, EmptyList, Float, Int, Map, Seq, Str
+from strictyaml.ruamel.comments import CommentedSeq
 
 
 # May encounter breaking changes otherwise
@@ -61,7 +62,7 @@ from strictyaml import load, Bool, EmptyList, Float, Int, Map, Seq, Str
 assert discord.version_info.major == 1 and discord.version_info.minor == 7
 
 SCRIPT_NAME = "NT Pug Bot"
-SCRIPT_VERSION = "0.13.0"
+SCRIPT_VERSION = "0.13.1"
 
 CFG_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                         "config.yml")
@@ -92,7 +93,10 @@ def cfg(key):
        to the type determined by the config file's strictyaml schema.
     """
     if os.environ.get(key):
-        return type(CFG[key].value)(literal_eval(os.environ.get(key)))
+        ret_type = type(CFG[key].value)
+        if ret_type == CommentedSeq:
+            return CFG[key]
+        return ret_type(literal_eval(os.environ.get(key)))
     return CFG[key].value
 
 
