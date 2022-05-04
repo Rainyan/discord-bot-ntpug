@@ -62,7 +62,7 @@ from strictyaml.ruamel.comments import CommentedSeq
 assert discord.version_info.major == 1 and discord.version_info.minor == 7
 
 SCRIPT_NAME = "NT Pug Bot"
-SCRIPT_VERSION = "0.13.1"
+SCRIPT_VERSION = "0.14.0"
 
 CFG_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                         "config.yml")
@@ -144,8 +144,8 @@ class PugStatus():
         """
         async with self.lock:
             self.prev_puggers = self.jin_players + self.nsf_players
-            self.jin_players = []
-            self.nsf_players = []
+            self.jin_players.clear()
+            self.nsf_players.clear()
 
     async def player_join(self, player, team=None):
         """If there is enough room in this PUG queue, assigns this player
@@ -201,25 +201,38 @@ class PugStatus():
             return (is_cmd(msg, "pug") or is_cmd(msg, "unpug")
                     or is_pug_start(msg))
 
-        # First reset the PUG queue, and then replay the pug/unpug traffic
-        # within the acceptable "restore_puggers_limit_hours" history range.
-        await self.reset()
-        # We remove the default max retrieved messages history limit because
-        # we need to always retrieve the full order of events here. This can
-        # be a slow operation if the channel is heavily congested within the
-        # "now-after" search range, but it's acceptable here because this code
-        # only runs on bot init, and then once per clear_inactive_puggers()
-        # task loop period, which is at most once per hour.
-        async for msg in self.guild_channel.history(limit=None,
-                                                    after=after,
-                                                    oldest_first=True).\
-                filter(predicate):
-            if is_pug_start(msg):
-                await self.reset()
-            elif is_cmd(msg, "pug"):
-                await self.player_join(msg.author)
-            else:
-                await self.player_leave(msg.author)
+        backup_nsf = self.nsf_players.copy()
+        backup_jin = self.jin_players.copy()
+        backup_prev = self.prev_puggers.copy()
+        try:
+            # First reset the PUG queue, and then replay the pug/unpug traffic
+            # within the acceptable "restore_puggers_limit_hours" history range
+            await self.reset()
+            # We remove the default max retrieved messages history limit
+            # because we need to always retrieve the full order of events here.
+            # This can be a slow operation if the channel is heavily congested
+            # within the "now-after" search range, but it's acceptable here
+            # because this code only runs on bot init, and then once per
+            # clear_inactive_puggers() task loop period, which is at most once
+            # per hour.
+            async for msg in self.guild_channel.history(limit=None,
+                                                        after=after,
+                                                        oldest_first=True).\
+                    filter(predicate):
+                if is_pug_start(msg):
+                    await self.reset()
+                elif is_cmd(msg, "pug"):
+                    await self.player_join(msg.author)
+                else:
+                    await self.player_leave(msg.author)
+        # Discord frequently HTTP 500's, so need to have pug queue backups.
+        # We can also hit a HTTP 429 here, which might be a pycord bug(?)
+        # as I don't think we're being unreasonable with the history range.
+        except discord.errors.HTTPException as err:
+            self.nsf_players = backup_nsf.copy()
+            self.jin_players = backup_jin.copy()
+            self.prev_puggers = backup_prev.copy()
+            raise err
 
     async def player_leave(self, player):
         """Removes a player from the pugger queue if they were in it.
@@ -668,14 +681,15 @@ class PugQueueCog(commands.Cog):
         """
         async with self.lock:
             for guild in bot.guilds:
+                if guild not in pug_guilds:
+                    continue
+                if pug_guilds[guild].is_full():
+                    continue
                 for channel in guild.channels:
                     if channel.name != PUG_CHANNEL_NAME:
                         continue
-                    if guild not in pug_guilds:
-                        continue
-                    if pug_guilds[guild].is_full():
-                        continue
                     await pug_guilds[guild].reload_puggers()
+                    break
 
 
 bot.add_cog(ErrorHandlerCog(bot))
