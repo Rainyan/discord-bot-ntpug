@@ -232,7 +232,7 @@ class PugStatus():
             self.nsf_players = backup_nsf.copy()
             self.jin_players = backup_jin.copy()
             self.prev_puggers = backup_prev.copy()
-            raise
+            raise err
 
     async def player_leave(self, player):
         """Removes a player from the pugger queue if they were in it.
