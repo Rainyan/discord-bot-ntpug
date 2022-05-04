@@ -229,9 +229,9 @@ class PugStatus():
         # We can also hit a HTTP 429 here, which might be a pycord bug(?)
         # as I don't think we're being unreasonable with the history range.
         except discord.errors.HTTPException as err:
-            self.nsf_players = backup_nsf
-            self.jin_players = backup_jin
-            self.prev_puggers = backup_prev
+            self.nsf_players = backup_nsf.copy()
+            self.jin_players = backup_jin.copy()
+            self.prev_puggers = backup_prev.copy()
             raise
 
     async def player_leave(self, player):
