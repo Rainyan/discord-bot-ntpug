@@ -668,14 +668,15 @@ class PugQueueCog(commands.Cog):
         """
         async with self.lock:
             for guild in bot.guilds:
+                if guild not in pug_guilds:
+                    continue
+                if pug_guilds[guild].is_full():
+                    continue
                 for channel in guild.channels:
                     if channel.name != PUG_CHANNEL_NAME:
                         continue
-                    if guild not in pug_guilds:
-                        continue
-                    if pug_guilds[guild].is_full():
-                        continue
                     await pug_guilds[guild].reload_puggers()
+                    break
 
 
 bot.add_cog(ErrorHandlerCog(bot))
