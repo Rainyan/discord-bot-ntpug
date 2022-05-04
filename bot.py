@@ -144,8 +144,8 @@ class PugStatus():
         """
         async with self.lock:
             self.prev_puggers = self.jin_players + self.nsf_players
-            self.jin_players = []
-            self.nsf_players = []
+            self.jin_players.clear()
+            self.nsf_players.clear()
 
     async def player_join(self, player, team=None):
         """If there is enough room in this PUG queue, assigns this player
