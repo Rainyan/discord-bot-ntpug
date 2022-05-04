@@ -50,7 +50,9 @@ python bot.py
 ```
 
 # Troubleshooting
-Check the issues to see if your problem has already been reported. If not, feel free to open a new issue.
+Check the [issues tab](https://github.com/Rainyan/discord-bot-ntpug/issues) to see if your problem has already been reported. If not, feel free to open a new issue.
+
+There's also a [discussions tab](https://github.com/Rainyan/discord-bot-ntpug/discussions) in the repo for more freeform questions/suggestions.
 
 # Contributing
 Pull requests are welcome! Please target the `main` branch for your edits. Also consider tagging yourself in the relevant issue ticket, or creating a new issue for your feature if it doesn't exist yet, to avoid conflicting updates.
