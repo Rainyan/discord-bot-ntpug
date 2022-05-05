@@ -2,7 +2,7 @@
 # and as such will take precedence over the values defined in this file. This can be especially useful for cloud
 # deployments, but you can freely choose to define the values in whichever location.
 #
-# Note that the type of all of the variables is enforced as it would by evaluated by Python's literal_eval(...),
+# Note that the type of all of the variables is enforced as it would when evaluated by Python's literal_eval(...),
 # so for example the string value of "NTBOT_SECRET_TOKEN" will have to include the double quotations ("token")
 # as part of its value. Likewise, integer values cannot be represented as floating point numbers, etc.
 # Any mismatching config types will throw an error upon launching of the bot, so this kind of misconfiguration
