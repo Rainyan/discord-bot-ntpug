@@ -4,7 +4,8 @@
 #
 # Note that the type of all of the variables is enforced as it would when evaluated against the expected type
 # by Python's literal_eval(...), so for example the string value of "NTBOT_SECRET_TOKEN" will have to include
-# the double quotations ("token") as part of its value (even when defined as an env variable!)
+# the double quotations ("token") as part of its value if using env variables. This holds true for all string
+# values defined as env variables.
 #
 # Due to strict type checking, things like casting integer values into floats, etc, is also disallowed in the
 # config. Any mismatching config types will throw an error upon launching of the bot, so this kind of
