@@ -62,7 +62,7 @@ from strictyaml.ruamel.comments import CommentedSeq
 assert discord.version_info.major == 1 and discord.version_info.minor == 7
 
 SCRIPT_NAME = "NT Pug Bot"
-SCRIPT_VERSION = "0.14.0"
+SCRIPT_VERSION = "0.14.1"
 
 CFG_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                         "config.yml")
@@ -185,21 +185,14 @@ class PugStatus():
         after = after.replace(tzinfo=None)
 
         def is_cmd(msg, cmd):
-            """Predicate for checking if message equals a command.
+            """Predicate for whether message equals a specific PUG command.
             """
             return msg.content == f"{bot.command_prefix}{cmd}"
 
         def is_pug_start(msg):
-            """Predicate for PUG start.
+            """Predicate for whether a message signals PUG start.
             """
             return msg.author.bot and msg.content.startswith(PUG_READY_TITLE)
-
-        def predicate(msg):
-            """Combined predicate for filtering the message history for
-               enumeration.
-            """
-            return (is_cmd(msg, "pug") or is_cmd(msg, "unpug")
-                    or is_pug_start(msg))
 
         backup_nsf = self.nsf_players.copy()
         backup_jin = self.jin_players.copy()
@@ -218,7 +211,9 @@ class PugStatus():
             async for msg in self.guild_channel.history(limit=None,
                                                         after=after,
                                                         oldest_first=True).\
-                    filter(predicate):
+                    filter(lambda msg: any((is_cmd(msg, "pug"),
+                                            is_cmd(msg, "unpug"),
+                                            is_pug_start(msg)))):
                 if is_pug_start(msg):
                     await self.reset()
                 elif is_cmd(msg, "pug"):
