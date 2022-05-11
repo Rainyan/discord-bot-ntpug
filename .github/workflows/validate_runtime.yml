@@ -22,7 +22,7 @@ jobs:
           
           import semver
           
-          with open("runtime.txt") as f:
+          with open("runtime.txt", encoding="utf-8") as f:
               lines = f.readlines()
           assert len(lines) == 1
           line = lines[0].strip()
@@ -31,6 +31,11 @@ jobs:
           runtime_ver = semver.VersionInfo.parse(line[len("python-"):])
           assert runtime_ver.major == 3
           
+          # TODO: some smart way to update this automatically
           python_eol_limit = semver.VersionInfo.parse("3.7.0")
           assert runtime_ver >= python_eol_limit
+          
+          # Pycord supports Python>=3.8, same with our local code.
+          lowest_supported_feature_set = semver.VersionInfo.parse("3.8.0")
+          assert runtime_ver >= lowest_supported_feature_set
         shell: python
