@@ -345,15 +345,26 @@ class PugStatus():
         # is incompatible with datetime.datetime for equality comparison.
         limit = int(after.timestamp())
 
-        async for msg in self.guild_channel.history(limit=limit,
-                                                    after=after,
-                                                    oldest_first=False):
-            if PUGGER_ROLE_NAME in [role.name for role in msg.role_mentions]:
-                # Because Pycord 1.7.3 returns non timezone aware UTC date,
-                # and we need to subtract a timedelta using it.
-                naive_utc_now = datetime.now(timezone.utc).replace(tzinfo=None)
-                self.last_role_ping = msg.created_at
-                return naive_utc_now - msg.created_at
+        try:
+            async for msg in self.guild_channel.history(limit=limit,
+                                                        after=after,
+                                                        oldest_first=False):
+                if PUGGER_ROLE_NAME in [role.name for role in msg.role_mentions]:
+                    # Because Pycord 1.7.3 returns non timezone aware UTC date,
+                    # and we need to subtract a timedelta using it.
+                    naive_utc_now = datetime.now(timezone.utc).replace(tzinfo=None)
+                    self.last_role_ping = msg.created_at
+                    return naive_utc_now - msg.created_at
+        except discord.errors.HTTPException as err:
+            # If it's not a library error, and we got a HTTP 5xx response,
+            # err on the side of caution and treat it as if we found a recent ping
+            # by returning a zeroed timedelta, so that the bot will try again later.
+            # The Discord API throws server side HTTP 5xx errors pretty much daily,
+            # so silently ignoring them here keeps the bot side error logs cleaner
+            # since the Discord bugs aren't really actionable for us as the API user.
+            if err.code == 0 and str(err.status)[:1] == "5":
+                return datetime.timedelta()
+            raise err
         return None
 
     async def ping_role(self):
