@@ -377,17 +377,17 @@ class PugStatus():
             if self.num_more_needed() == 0:
                 return
 
+            pugger_ratio = self.num_queued() / self.num_expected()
+            ping_ratio = cfg("NTBOT_PUGGER_ROLE_PING_THRESHOLD")
+            if pugger_ratio < ping_ratio:
+                return
+
             last_ping_dt = await self.role_ping_deltatime()
             hours_limit = cfg("NTBOT_PUGGER_ROLE_PING_MIN_INTERVAL_HOURS")
             if last_ping_dt is not None:
                 last_ping_hours = last_ping_dt.total_seconds() / 60 / 60
                 if last_ping_hours < hours_limit:
                     return
-
-            pugger_ratio = self.num_queued() / self.num_expected()
-            ping_ratio = cfg("NTBOT_PUGGER_ROLE_PING_THRESHOLD")
-            if pugger_ratio < ping_ratio:
-                return
 
             for role in self.guild_roles:
                 if role.name == PUGGER_ROLE:
