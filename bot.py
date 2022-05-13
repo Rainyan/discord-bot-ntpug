@@ -62,7 +62,7 @@ from strictyaml.ruamel.comments import CommentedSeq
 assert discord.version_info.major == 1 and discord.version_info.minor == 7
 
 SCRIPT_NAME = "NT Pug Bot"
-SCRIPT_VERSION = "0.14.1"
+SCRIPT_VERSION = "0.14.2"
 
 CFG_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                         "config.yml")
