@@ -62,7 +62,7 @@ from strictyaml.ruamel.comments import CommentedSeq
 assert discord.version_info.major == 1 and discord.version_info.minor == 7
 
 SCRIPT_NAME = "NT Pug Bot"
-SCRIPT_VERSION = "0.14.2"
+SCRIPT_VERSION = "0.14.3"
 
 CFG_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                         "config.yml")
@@ -302,7 +302,7 @@ class PugStatus():
                     "status": discord.Status.idle
                 }
 
-            puggers_needed = max(0, self.num_expected() - self.num_queued())
+            puggers_needed = self.num_more_needed()
 
             # Need to keep flipping status because activity update in itself
             # doesn't seem to propagate that well.
