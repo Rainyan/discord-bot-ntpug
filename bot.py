@@ -340,13 +340,8 @@ class PugStatus():
         after = datetime.fromisoformat(after.in_timezone("UTC").isoformat())
         after = after.replace(tzinfo=None)
 
-        # Need to do this weird conversion for the history limit param because
-        # it gets compared to an int inside the Pycord 1.7.3 iterator, which
-        # is incompatible with datetime.datetime for equality comparison.
-        limit = int(after.timestamp())
-
         try:
-            async for msg in self.guild_channel.history(limit=limit,
+            async for msg in self.guild_channel.history(limit=None,
                                                         after=after,
                                                         oldest_first=False):
                 if PUGGER_ROLE in [role.name for role in msg.role_mentions]:
