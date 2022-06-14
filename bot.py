@@ -55,14 +55,14 @@ from strictyaml.ruamel.comments import CommentedSeq
 
 
 # May encounter breaking changes otherwise
-# NOTE: Discord API "decomissions" are scheduled for April 30, 2022:
+# NOTE: Discord API "decomissions" are scheduled for August 31, 2022:
 # https://github.com/discord/discord-api-docs/discussions/4510
 # Probably have to upgrade to pycord 2.X dev branch, or
 # some original discord.py project equivalent whenever it releases.
 assert discord.version_info.major == 1 and discord.version_info.minor == 7
 
 SCRIPT_NAME = "NT Pug Bot"
-SCRIPT_VERSION = "0.14.3"
+SCRIPT_VERSION = "0.14.4"
 
 CFG_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                         "config.yml")
@@ -609,7 +609,6 @@ class ErrorHandlerCog(commands.Cog):
         self.bot = parent_bot
 
     @commands.Cog.listener()
-    # pylint: disable=no-self-use
     async def on_command_error(self, ctx, err):
         """Error handler for bot commands.
         """
