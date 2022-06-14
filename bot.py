@@ -609,7 +609,6 @@ class ErrorHandlerCog(commands.Cog):
         self.bot = parent_bot
 
     @commands.Cog.listener()
-    # pylint: disable=no-self-use
     async def on_command_error(self, ctx, err):
         """Error handler for bot commands.
         """
