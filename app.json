@@ -19,7 +19,7 @@
       "value": "\"pug-queue\""
     },
     "NTBOT_PLAYERS_REQUIRED_TOTAL": {
-      "description": "Number of players, total, that are required for a PUG match. For example, 10 for a 5v5. Needs to be an even number.",
+      "description": "Number of players, total, that are required for a PUG match. For example, 10 for a 5v5. Needs to be a positive even number.",
       "value": "10"
     },
     "NTBOT_POLLING_INTERVAL_SECS": {
