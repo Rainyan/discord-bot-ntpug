@@ -62,7 +62,7 @@ from strictyaml.ruamel.comments import CommentedSeq
 assert discord.version_info.major == 1 and discord.version_info.minor == 7
 
 SCRIPT_NAME = "NT Pug Bot"
-SCRIPT_VERSION = "0.14.4"
+SCRIPT_VERSION = "0.15.0"
 
 CFG_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                         "config.yml")
@@ -100,7 +100,8 @@ def cfg(key):
     return CFG[key].value
 
 
-bot = commands.Bot(command_prefix=cfg("NTBOT_CMD_PREFIX"))
+bot = commands.Bot(command_prefix=cfg("NTBOT_CMD_PREFIX"),
+                   case_insensitive=True)
 NUM_PLAYERS_REQUIRED = cfg("NTBOT_PLAYERS_REQUIRED_TOTAL")
 assert NUM_PLAYERS_REQUIRED > 0, "Need positive number of players"
 assert NUM_PLAYERS_REQUIRED % 2 == 0, "Need even number of players"
