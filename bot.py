@@ -62,7 +62,7 @@ from strictyaml.ruamel.comments import CommentedSeq
 assert discord.version_info.major == 1 and discord.version_info.minor == 7
 
 SCRIPT_NAME = "NT Pug Bot"
-SCRIPT_VERSION = "0.15.0"
+SCRIPT_VERSION = "0.15.1"
 
 CFG_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                         "config.yml")
@@ -134,7 +134,8 @@ class PugStatus():
         self.nsf_players = []
         self.prev_puggers = []
         self.players_required_total = players_required
-        self.players_per_team = int(self.players_required_total / 2)
+        assert self.players_required_total >= 2
+        assert self.players_required_total % 2 == 0
         self.last_changed_presence = 0
         self.last_presence = None
         self.lock = asyncio.Lock()
@@ -234,10 +235,10 @@ class PugStatus():
         """Removes a player from the pugger queue if they were in it.
         """
         async with self.lock:
-            num_before = self.num_queued()
+            num_before = self.num_queued
             self.jin_players = [p for p in self.jin_players if p != player]
             self.nsf_players = [p for p in self.nsf_players if p != player]
-            num_after = self.num_queued()
+            num_after = self.num_queued
 
             left_queue = (num_after != num_before)
             if left_queue:
@@ -245,25 +246,35 @@ class PugStatus():
             return False, (f"{player.mention} You are not currently in the "
                            "PUG queue")
 
+    @property
     def num_queued(self):
         """Returns the number of puggers currently in the PUG queue.
         """
         return len(self.jin_players) + len(self.nsf_players)
 
+    @property
     def num_expected(self):
         """Returns the number of puggers expected, total, to start a PUG.
         """
         return self.players_required_total
 
+    @property
+    def players_per_team(self):
+        """Players required to start a PUG, per team."""
+        res = self.num_expected / 2
+        assert res % 1 == 0, "Must be whole number"
+        return int(res)
+
+    @property
     def num_more_needed(self):
         """Returns how many more puggers are needed to start a PUG.
         """
-        return max(0, self.num_expected() - self.num_queued())
+        return max(0, self.num_expected - self.num_queued)
 
+    @property
     def is_full(self):
-        """Whether the PUG queue is currently full or not."
-        """
-        return self.num_queued() >= self.num_expected()
+        """Whether the PUG queue is currently full or not."""
+        return self.num_queued >= self.num_expected
 
     async def start_pug(self):
         """Starts a PUG match.
@@ -303,7 +314,7 @@ class PugStatus():
                     "status": discord.Status.idle
                 }
 
-            puggers_needed = self.num_more_needed()
+            puggers_needed = self.num_more_needed
 
             # Need to keep flipping status because activity update in itself
             # doesn't seem to propagate that well.
@@ -370,10 +381,10 @@ class PugStatus():
            Frequency of these pings is restricted to avoid being too spammy.
         """
         async with self.lock:
-            if self.num_more_needed() == 0:
+            if self.num_more_needed == 0:
                 return
 
-            pugger_ratio = self.num_queued() / self.num_expected()
+            pugger_ratio = self.num_queued / self.num_expected
             ping_ratio = cfg("NTBOT_PUGGER_ROLE_PING_THRESHOLD")
             if pugger_ratio < ping_ratio:
                 return
@@ -390,7 +401,7 @@ class PugStatus():
                     min_nag_hours = f"{hours_limit:.1f}"
                     min_nag_hours = min_nag_hours.rstrip("0").rstrip(".")
                     msg = (f"{role.mention} Need **"
-                           f"{self.num_more_needed()} more puggers** "
+                           f"{self.num_more_needed} more puggers** "
                            "for a game!\n_(This is an automatic ping "
                            "to all puggers, because the PUG queue is "
                            f"{(ping_ratio * 100):.0f}% full.\nRest "
@@ -426,8 +437,8 @@ async def pug(ctx):
         ctx.message.author)
     if join_success:
         response = (f"{ctx.message.author.name} has joined the PUG queue "
-                    f"({pug_guilds[ctx.guild].num_queued()} / "
-                    f"{pug_guilds[ctx.guild].num_expected()})")
+                    f"({pug_guilds[ctx.guild].num_queued} / "
+                    f"{pug_guilds[ctx.guild].num_expected})")
     await ctx.send(f"{response}")
 
 
@@ -442,8 +453,8 @@ async def unpug(ctx):
         ctx.message.author)
     if leave_success:
         msg = (f"{ctx.message.author.name} has left the PUG queue "
-               f"({pug_guilds[ctx.guild].num_queued()} / "
-               f"{pug_guilds[ctx.guild].num_expected()})")
+               f"({pug_guilds[ctx.guild].num_queued} / "
+               f"{pug_guilds[ctx.guild].num_expected})")
     await ctx.send(msg)
 
 
@@ -505,11 +516,11 @@ async def puggers(ctx):
     if ctx.guild not in pug_guilds or not ctx.channel.name == PUG_CHANNEL_NAME:
         return
 
-    msg = (f"{pug_guilds[ctx.guild].num_queued()} / "
-           f"{pug_guilds[ctx.guild].num_expected()} player(s) currently "
+    msg = (f"{pug_guilds[ctx.guild].num_queued} / "
+           f"{pug_guilds[ctx.guild].num_expected} player(s) currently "
            "queued")
 
-    if pug_guilds[ctx.guild].num_queued() > 0:
+    if pug_guilds[ctx.guild].num_queued > 0:
         all_players_queued = pug_guilds[ctx.guild].jin_players + \
             pug_guilds[ctx.guild].nsf_players
         msg += ": "
@@ -538,7 +549,7 @@ async def ping_puggers(ctx):
     if not is_admin:
         if ctx.message.author not in pug_guilds[ctx.guild].jin_players and \
                 ctx.message.author not in pug_guilds[ctx.guild].nsf_players:
-            if pug_guilds[ctx.guild].num_queued() == 0:
+            if pug_guilds[ctx.guild].num_queued == 0:
                 await ctx.send(f"{ctx.author.mention} PUG queue is currently "
                                "empty.")
             else:
@@ -552,7 +563,7 @@ async def ping_puggers(ctx):
     async with pug_guilds[ctx.guild].lock:
         # Comparing <=1 instead of 0 because it makes no sense to ping others
         # if you're the only one currently in the queue.
-        if pug_guilds[ctx.guild].num_queued() <= 1:
+        if pug_guilds[ctx.guild].num_queued <= 1:
             await ctx.send(f"{ctx.author.mention} There are no other players "
                            "in the queue to ping!")
             ping_puggers.reset_cooldown(ctx)
@@ -660,7 +671,7 @@ class PugQueueCog(commands.Cog):
                         pug_guilds[guild] = PugStatus(guild_channel=channel,
                                                       guild_roles=guild.roles)
                         await pug_guilds[guild].reload_puggers()
-                    if pug_guilds[guild].is_full():
+                    if pug_guilds[guild].is_full:
                         pug_start_success, msg = \
                             await pug_guilds[guild].start_pug()
                         if pug_start_success:
@@ -686,7 +697,7 @@ class PugQueueCog(commands.Cog):
             for guild in bot.guilds:
                 if guild not in pug_guilds:
                     continue
-                if pug_guilds[guild].is_full():
+                if pug_guilds[guild].is_full:
                     continue
                 for channel in guild.channels:
                     if channel.name != PUG_CHANNEL_NAME:
