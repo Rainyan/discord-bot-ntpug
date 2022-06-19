@@ -46,6 +46,8 @@ python -m pip install --upgrade pip
 pip install -r requirements.txt
 
 # Edit config.yml and/or set env vars as required
+
+# Run the bot!
 python bot.py
 ```
 
