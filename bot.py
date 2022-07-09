@@ -62,7 +62,7 @@ from strictyaml.ruamel.comments import CommentedSeq
 assert discord.version_info.major == 1 and discord.version_info.minor == 7
 
 SCRIPT_NAME = "NT Pug Bot"
-SCRIPT_VERSION = "0.15.1"
+SCRIPT_VERSION = "0.15.2"
 
 CFG_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                         "config.yml")
@@ -139,7 +139,6 @@ class PugStatus():
         self.last_changed_presence = 0
         self.last_presence = None
         self.lock = asyncio.Lock()
-        self.last_role_ping = None
 
     async def reset(self):
         """Stores the previous puggers, and then resets current pugger queue.
@@ -361,7 +360,6 @@ class PugStatus():
                     # and we need to subtract a timedelta using it.
                     naive_utc_now = datetime.now(timezone.utc)
                     naive_utc_now = naive_utc_now.replace(tzinfo=None)
-                    self.last_role_ping = msg.created_at
                     return naive_utc_now - msg.created_at
         except discord.errors.HTTPException as err:
             # If it's not a library error, and we got a HTTP 5xx response,
