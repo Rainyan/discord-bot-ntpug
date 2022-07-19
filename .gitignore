@@ -1,5 +1,5 @@
 # Vim
-.swp
+*.swp
 
 # discord-bot-ntpug specific ignore overrides:
 Pipfile
