@@ -1,3 +1,6 @@
+# Vim
+.swp
+
 # discord-bot-ntpug specific ignore overrides:
 Pipfile
 Pipfile.lock
