@@ -50,8 +50,8 @@ import random
 import discord
 from discord.ext import commands, tasks
 import pendulum
-from strictyaml import load, Bool, EmptyList, Float, Int, Map, Seq, Str
-from strictyaml.ruamel.comments import CommentedSeq
+from strictyaml import (as_document, load, Bool, EmptyList, Float, Int, Map,
+                        Seq, Str)
 
 
 # May encounter breaking changes otherwise
@@ -62,28 +62,30 @@ from strictyaml.ruamel.comments import CommentedSeq
 assert discord.version_info.major == 1 and discord.version_info.minor == 7
 
 SCRIPT_NAME = "NT Pug Bot"
-SCRIPT_VERSION = "0.15.2"
+SCRIPT_VERSION = "0.16.0"
+
+# The schema used for StrictYAML parsing.
+YAML_CFG_SCHEMA = {
+    "NTBOT_SECRET_TOKEN": Str(),
+    "NTBOT_CMD_PREFIX": Str(),
+    "NTBOT_PUG_CHANNEL": Str(),
+    "NTBOT_PLAYERS_REQUIRED_TOTAL": Int(),
+    "NTBOT_DEBUG_ALLOW_REQUEUE": Bool(),
+    "NTBOT_POLLING_INTERVAL_SECS": Int(),
+    "NTBOT_PRESENCE_INTERVAL_SECS": Int(),
+    "NTBOT_PUGGER_ROLE": Str(),
+    "NTBOT_PUGGER_ROLE_PING_THRESHOLD": Float(),
+    "NTBOT_PUGGER_ROLE_PING_MIN_INTERVAL_HOURS": Float(),
+    "NTBOT_PUG_ADMIN_ROLES": Seq(Str()) | EmptyList(),
+    "NTBOT_IDLE_THRESHOLD_HOURS": Int(),
+    "NTBOT_PING_PUGGERS_COOLDOWN_SECS": Float(),
+}
 
 CFG_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                         "config.yml")
 assert os.path.isfile(CFG_PATH)
 with open(file=CFG_PATH, mode="r", encoding="utf-8") as f_config:
-    YAML_CFG_SCHEMA = Map({
-        "NTBOT_SECRET_TOKEN": Str(),
-        "NTBOT_CMD_PREFIX": Str(),
-        "NTBOT_PUG_CHANNEL": Str(),
-        "NTBOT_PLAYERS_REQUIRED_TOTAL": Int(),
-        "NTBOT_DEBUG_ALLOW_REQUEUE": Bool(),
-        "NTBOT_POLLING_INTERVAL_SECS": Int(),
-        "NTBOT_PRESENCE_INTERVAL_SECS": Int(),
-        "NTBOT_PUGGER_ROLE": Str(),
-        "NTBOT_PUGGER_ROLE_PING_THRESHOLD": Float(),
-        "NTBOT_PUGGER_ROLE_PING_MIN_INTERVAL_HOURS": Float(),
-        "NTBOT_PUG_ADMIN_ROLES": Seq(Str()) | EmptyList(),
-        "NTBOT_IDLE_THRESHOLD_HOURS": Int(),
-        "NTBOT_PING_PUGGERS_COOLDOWN_SECS": Float(),
-    })
-    CFG = load(f_config.read(), YAML_CFG_SCHEMA)
+    CFG = load(f_config.read(), Map(YAML_CFG_SCHEMA))
 assert CFG is not None
 
 
@@ -92,11 +94,18 @@ def cfg(key):
        in that order. If using an env var, its format has to be constructible
        to the type determined by the config file's strictyaml schema.
     """
+    assert isinstance(key, str)
     if os.environ.get(key):
-        ret_type = type(CFG[key].value)
-        if ret_type == CommentedSeq:
-            return CFG[key]
-        return ret_type(literal_eval(os.environ.get(key)))
+        expected_ret_type = YAML_CFG_SCHEMA[key]
+        # Small placeholder schema used for validating just this type.
+        # We don't want to use the main schema because then we'd need
+        # to populate it entirely, even though we're only interested
+        # in returning this particular var.
+        mini_schema = {key: expected_ret_type}
+        # Generate StrictYAML in-place, with the mini-schema to enforce
+        # strict typing, and then return the queried key's value.
+        return as_document({key: literal_eval(os.environ.get(key))},
+                           Map(mini_schema))[key].value
     return CFG[key].value
 
 
