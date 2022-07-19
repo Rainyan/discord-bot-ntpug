@@ -62,3 +62,7 @@ NTBOT_IDLE_THRESHOLD_HOURS: 16
 # How often can PUG queuers bulk-ping all the other players currently in the queue, in seconds.
 # Admins with role(s) defined by "NTBOT_PUG_ADMIN_ROLES" are not affected by this time limit.
 NTBOT_PING_PUGGERS_COOLDOWN_SECS: 600.0
+
+# Names of each team
+FIRST_TEAM_NAME: Jinrai
+SECOND_TEAM_NAME: NSF

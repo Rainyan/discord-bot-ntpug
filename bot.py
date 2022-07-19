@@ -121,6 +121,8 @@ assert 0 <= cfg("NTBOT_PUGGER_ROLE_PING_THRESHOLD") <= 1
 PUGGER_ROLE = cfg("NTBOT_PUGGER_ROLE")
 assert len(PUGGER_ROLE) > 0
 
+FIRST_TEAM_NAME = cfg("FIRST_TEAM_NAME")
+SECOND_TEAM_NAME = cfg("SECOND_TEAM_NAME")
 
 # This is a variable because the text used for detecting previous PUGs when
 # restoring status during restart.
@@ -139,8 +141,8 @@ class PugStatus():
                  guild_roles=None):
         self.guild_roles = [] if guild_roles is None else guild_roles
         self.guild_channel = guild_channel
-        self.jin_players = []
-        self.nsf_players = []
+        self.team1_players = []
+        self.team2_players = []
         self.prev_puggers = []
         self.players_required_total = players_required
         assert self.players_required_total >= 2
@@ -153,9 +155,9 @@ class PugStatus():
         """Stores the previous puggers, and then resets current pugger queue.
         """
         async with self.lock:
-            self.prev_puggers = self.jin_players + self.nsf_players
-            self.jin_players.clear()
-            self.nsf_players.clear()
+            self.prev_puggers = self.team1_players + self.team2_players
+            self.team1_players.clear()
+            self.team2_players.clear()
 
     async def player_join(self, player, team=None):
         """If there is enough room in this PUG queue, assigns this player
@@ -164,19 +166,19 @@ class PugStatus():
         """
         async with self.lock:
             if not DEBUG_ALLOW_REQUEUE and \
-                    (player in self.jin_players or player in self.nsf_players):
+                    (player in self.team1_players or player in self.team2_players):
                 return False, (f"{player.mention} You are already queued! "
                                "If you wanted to un-PUG, please use **"
                                f"{bot.command_prefix}unpug** "
                                "instead.")
             if team is None:
-                team = random.randint(0, 1)  # flip a coin between jin/nsf
+                team = random.randint(0, 1)  # flip a coin between team1/team2
             if team == 0:
-                if len(self.jin_players) < self.players_per_team:
-                    self.jin_players.append(player)
+                if len(self.team1_players) < self.players_per_team:
+                    self.team1_players.append(player)
                     return True, ""
-            if len(self.nsf_players) < self.players_per_team:
-                self.nsf_players.append(player)
+            if len(self.team2_players) < self.players_per_team:
+                self.team2_players.append(player)
                 return True, ""
             return False, (f"{player.mention} Sorry, this PUG is currently "
                            "full!")
@@ -204,8 +206,8 @@ class PugStatus():
             """
             return msg.author.bot and msg.content.startswith(PUG_READY_TITLE)
 
-        backup_nsf = self.nsf_players.copy()
-        backup_jin = self.jin_players.copy()
+        backup_team2 = self.team2_players.copy()
+        backup_team1 = self.team1_players.copy()
         backup_prev = self.prev_puggers.copy()
         try:
             # First reset the PUG queue, and then replay the pug/unpug traffic
@@ -234,8 +236,8 @@ class PugStatus():
         # We can also hit a HTTP 429 here, which might be a pycord bug(?)
         # as I don't think we're being unreasonable with the history range.
         except discord.errors.HTTPException as err:
-            self.nsf_players = backup_nsf.copy()
-            self.jin_players = backup_jin.copy()
+            self.team2_players = backup_team2.copy()
+            self.team1_players = backup_team1.copy()
             self.prev_puggers = backup_prev.copy()
             raise err
 
@@ -244,8 +246,8 @@ class PugStatus():
         """
         async with self.lock:
             num_before = self.num_queued
-            self.jin_players = [p for p in self.jin_players if p != player]
-            self.nsf_players = [p for p in self.nsf_players if p != player]
+            self.team1_players = [p for p in self.team1_players if p != player]
+            self.team2_players = [p for p in self.team2_players if p != player]
             num_after = self.num_queued
 
             left_queue = (num_after != num_before)
@@ -258,7 +260,7 @@ class PugStatus():
     def num_queued(self):
         """Returns the number of puggers currently in the PUG queue.
         """
-        return len(self.jin_players) + len(self.nsf_players)
+        return len(self.team1_players) + len(self.team2_players)
 
     @property
     def num_expected(self):
@@ -288,16 +290,16 @@ class PugStatus():
         """Starts a PUG match.
         """
         async with self.lock:
-            if len(self.jin_players) == 0 or len(self.nsf_players) == 0:
+            if len(self.team1_players) == 0 or len(self.team2_players) == 0:
                 await self.reset()
                 return False, "Error: team was empty"
             msg = f"{PUG_READY_TITLE}\n"
-            msg += "_Jinrai players:_\n"
-            for player in self.jin_players:
+            msg += "\n_" + FIRST_TEAM_NAME + " players:_\n"
+            for player in self.team1_players:
                 msg += f"{player.mention}, "
             msg = msg[:-2]  # trailing ", "
-            msg += "\n_NSF players:_\n"
-            for player in self.nsf_players:
+            msg += "\n_" + SECOND_TEAM_NAME + " players:_\n"
+            for player in self.team2_players:
                 msg += f"{player.mention}, "
             msg = msg[:-2]  # trailing ", "
             msg += ("\n\nTeams unbalanced? Use **"
@@ -502,11 +504,11 @@ async def scramble(ctx):
         random.shuffle(pug_guilds[ctx.guild].prev_puggers)
         msg = f"{ctx.message.author.name} suggests scrambled teams:\n"
         msg += f"_(random shuffle id: {random_human_readable_phrase()})_\n"
-        msg += "_Jinrai players:_\n"
+        msg += "\n_" + FIRST_TEAM_NAME + " players:_\n"
         for i in range(int(len(pug_guilds[ctx.guild].prev_puggers) / 2)):
             msg += f"{pug_guilds[ctx.guild].prev_puggers[i].name}, "
         msg = msg[:-2]  # trailing ", "
-        msg += "\n_NSF players:_\n"
+        msg += "\n_" + SECOND_TEAM_NAME + " players:_\n"
         for i in range(int(len(pug_guilds[ctx.guild].prev_puggers) / 2),
                        len(pug_guilds[ctx.guild].prev_puggers)):
             msg += f"{pug_guilds[ctx.guild].prev_puggers[i].name}, "
@@ -528,8 +530,8 @@ async def puggers(ctx):
            "queued")
 
     if pug_guilds[ctx.guild].num_queued > 0:
-        all_players_queued = pug_guilds[ctx.guild].jin_players + \
-            pug_guilds[ctx.guild].nsf_players
+        all_players_queued = pug_guilds[ctx.guild].team1_players + \
+            pug_guilds[ctx.guild].team2_players
         msg += ": "
         for player in all_players_queued:
             msg += f"{player.name}, "
@@ -554,8 +556,8 @@ async def ping_puggers(ctx):
 
     # Only admins and players in the queue themselves are allowed to ping queue
     if not is_admin:
-        if ctx.message.author not in pug_guilds[ctx.guild].jin_players and \
-                ctx.message.author not in pug_guilds[ctx.guild].nsf_players:
+        if ctx.message.author not in pug_guilds[ctx.guild].team1_players and \
+                ctx.message.author not in pug_guilds[ctx.guild].team2_players:
             if pug_guilds[ctx.guild].num_queued == 0:
                 await ctx.send(f"{ctx.author.mention} PUG queue is currently "
                                "empty.")
@@ -587,10 +589,10 @@ async def ping_puggers(ctx):
 
     msg = ""
     async with pug_guilds[ctx.guild].lock:
-        for player in [p for p in pug_guilds[ctx.guild].jin_players
+        for player in [p for p in pug_guilds[ctx.guild].team1_players
                        if p != ctx.author]:
             msg += f"{player.mention}, "
-        for player in [p for p in pug_guilds[ctx.guild].nsf_players
+        for player in [p for p in pug_guilds[ctx.guild].team2_players
                        if p != ctx.author]:
             msg += f"{player.mention}, "
         msg = msg[:-2]  # trailing ", "
