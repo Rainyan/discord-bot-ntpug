@@ -79,6 +79,8 @@ YAML_CFG_SCHEMA = {
     "NTBOT_PUG_ADMIN_ROLES": Seq(Str()) | EmptyList(),
     "NTBOT_IDLE_THRESHOLD_HOURS": Int(),
     "NTBOT_PING_PUGGERS_COOLDOWN_SECS": Float(),
+    "FIRST_TEAM_NAME": Str(),
+    "SECOND_TEAM_NAME": Str(),
 }
 
 CFG_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)),
