@@ -168,7 +168,8 @@ class PugStatus():
         """
         async with self.lock:
             if not DEBUG_ALLOW_REQUEUE and \
-                    (player in self.team1_players or player in self.team2_players):
+                    (player in self.team1_players or
+                     player in self.team2_players):
                 return False, (f"{player.mention} You are already queued! "
                                "If you wanted to un-PUG, please use **"
                                f"{bot.command_prefix}unpug** "
