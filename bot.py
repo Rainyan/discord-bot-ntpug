@@ -62,7 +62,7 @@ from strictyaml import (as_document, load, Bool, EmptyList, Float, Int, Map,
 assert discord.version_info.major == 1 and discord.version_info.minor == 7
 
 SCRIPT_NAME = "NT Pug Bot"
-SCRIPT_VERSION = "0.16.0"
+SCRIPT_VERSION = "0.17.0"
 
 # The schema used for StrictYAML parsing.
 YAML_CFG_SCHEMA = {
@@ -79,8 +79,8 @@ YAML_CFG_SCHEMA = {
     "NTBOT_PUG_ADMIN_ROLES": Seq(Str()) | EmptyList(),
     "NTBOT_IDLE_THRESHOLD_HOURS": Int(),
     "NTBOT_PING_PUGGERS_COOLDOWN_SECS": Float(),
-    "FIRST_TEAM_NAME": Str(),
-    "SECOND_TEAM_NAME": Str(),
+    "NTBOT_FIRST_TEAM_NAME": Str(),
+    "NTBOT_SECOND_TEAM_NAME": Str(),
 }
 
 CFG_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)),
@@ -123,8 +123,8 @@ assert 0 <= cfg("NTBOT_PUGGER_ROLE_PING_THRESHOLD") <= 1
 PUGGER_ROLE = cfg("NTBOT_PUGGER_ROLE")
 assert len(PUGGER_ROLE) > 0
 
-FIRST_TEAM_NAME = cfg("FIRST_TEAM_NAME")
-SECOND_TEAM_NAME = cfg("SECOND_TEAM_NAME")
+FIRST_TEAM_NAME = cfg("NTBOT_FIRST_TEAM_NAME")
+SECOND_TEAM_NAME = cfg("NTBOT_SECOND_TEAM_NAME")
 
 # This is a variable because the text used for detecting previous PUGs when
 # restoring status during restart.
