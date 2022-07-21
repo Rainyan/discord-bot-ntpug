@@ -57,6 +57,14 @@
     "NTBOT_PING_PUGGERS_COOLDOWN_SECS": {
       "description": "How often can PUG queuers bulk-ping all the other players currently in the queue, in seconds. Admins with roles defined by \"NTBOT_PUG_ADMIN_ROLES\" are not affected by this time limit.",
       "value": "600.0"
+    },
+    "NTBOT_FIRST_TEAM_NAME": {
+	"description": "First team's name",
+	"value": "\"Jinrai\""
+    },
+    "NTBOT_SECOND_TEAM_NAME": {
+	"description": "Second team's name",
+	"value": "\"NSF\""
     }
   },
   "formation": {
