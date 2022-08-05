@@ -62,7 +62,7 @@ from strictyaml import (as_document, load, Bool, EmptyList, Float, Int, Map,
 assert discord.version_info.major == 1 and discord.version_info.minor == 7
 
 SCRIPT_NAME = "NT Pug Bot"
-SCRIPT_VERSION = "0.17.0"
+SCRIPT_VERSION = "0.17.1"
 
 # The schema used for StrictYAML parsing.
 YAML_CFG_SCHEMA = {
@@ -93,8 +93,8 @@ assert CFG is not None
 
 def cfg(key):
     """Returns a bot config value from environment variable or config file,
-       in that order. If using an env var, its format has to be constructible
-       to the type determined by the config file's strictyaml schema.
+       in that order. If using an env var, its format has to match the type
+       determined by the config values' StrictYAML schema.
     """
     assert isinstance(key, str)
     if os.environ.get(key):
