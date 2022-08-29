@@ -22,12 +22,12 @@ Commands are prefixed with a character defined by the config value `NTBOT_CMD_PR
 The config values have been documented as comments in the [config.yml file](config.yml) itself.
 
 # Installation
-For running the bot, it's recommended to use the `deploy` branch.
+For running the bot, it's recommended to use the `main` branch.
 
 ### Remote deployment
 If you want a one-click deployment, the button below generates a Heroku app for you:
 
-[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/Rainyan/discord-bot-ntpug/tree/deploy)
+[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/Rainyan/discord-bot-ntpug/tree/main)
 
 Otherwise, please follow the manual installation instructions below.
 
@@ -35,7 +35,6 @@ Otherwise, please follow the manual installation instructions below.
 ```sh
 git clone https://github.com/Rainyan/discord-bot-ntpug
 cd discord-bot-ntpug
-git switch deploy
 python -m pip install --upgrade pip
 
 # Before continuing, consider virtualizing the
