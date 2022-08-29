@@ -25,9 +25,11 @@ The config values have been documented as comments in the [config.yml file](conf
 For running the bot, it's recommended to use the `main` branch.
 
 ### Remote deployment
-If you want a one-click deployment, the button below generates a Heroku app for you:
+Some common deployment options for your convenience:
 
 [![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/Rainyan/discord-bot-ntpug/tree/main)
+
+[![Docker](https://user-images.githubusercontent.com/6595066/187285611-b90ffa3f-80d0-4716-8bbf-837be43e31b2.png)](https://hub.docker.com/repository/docker/rainrainrainrain/discord-bot-ntpug)
 
 Otherwise, please follow the manual installation instructions below.
 
