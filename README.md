@@ -25,7 +25,7 @@ The config values have been documented as comments in the [config.yml file](conf
 For running the bot, it's recommended to use the `main` branch.
 
 ### Remote deployment
-Some common deployment options for, your convenience:
+Some common deployment options, for your convenience:
 
 [![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/Rainyan/discord-bot-ntpug/tree/main)
 
