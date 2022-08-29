@@ -6,4 +6,5 @@ COPY . .
 
 RUN pip install -r requirements.txt
 
-CMD [ "python", "./bot.py" ]
+# Uncomment to run directly from Docker
+#CMD [ "python", "./bot.py" ]
