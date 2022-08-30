@@ -41,27 +41,7 @@ The Docker image linked above (`rainrainrainrain/discord-bot-ntpug:latest`) is c
 Example fly.toml file, for [fly.io](https://fly.io) deployments, is [available here](examples/fly.toml).
 
 #### Manual installation
-Option to install and run manually in your machine/VM.
-
-```bash
-#!/usr/bin/env bash
-
-git clone https://github.com/Rainyan/discord-bot-ntpug
-cd discord-bot-ntpug
-python -m pip install --upgrade pip
-
-# Before continuing, consider virtualizing the
-# environment below to keep things clean.
-# https://pipenv.pypa.io/en/latest/
-
-# Install requirements
-pip install -r requirements.txt
-
-# Edit config.yml and/or set env vars as required
-
-# Run the bot!
-python bot.py
-```
+It's also possible to install and run the bot manually in your machine/VM. Example Bash script is [available here](examples/manual_installation.sh).
 
 # Troubleshooting
 Check the [issues tab](https://github.com/Rainyan/discord-bot-ntpug/issues) to see if your problem has already been reported. If not, feel free to open a new issue.
