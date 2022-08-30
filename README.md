@@ -49,7 +49,23 @@ processes = []
   image = "rainrainrainrain/discord-bot-ntpug:latest"
 
 [env]
-  NTBOT_SECRET_TOKEN = "\"secret token goes here\""
+  # The Discord bot secret token goes here. Don't share this value with others.
+  # For info on how to generate this token, please see: https://discord.com/developers/docs
+  NTBOT_SECRET_TOKEN = "\"secret-token-goes-here\""
+  # Name of the Discord server channel that the bot listens to.
+  # This value has to be an exact match of the channel name.
+  NTBOT_PUG_CHANNEL = "\"pug-queue\""
+  # Number of players, total, that are required for a PUG match.
+  # For example, 10 for a 5v5. Needs to be an even number.
+  NTBOT_PLAYERS_REQUIRED_TOTAL = "10"
+  # Name of the puggers role. Used for pinging.
+  NTBOT_PUGGER_ROLE = "\"Puggers\""
+  # List of 0 or more PUG queue moderator/admin roles.
+  # If any user should be able to do PUG queue admin tasks, use an empty value.
+  NTBOT_PUG_ADMIN_ROLES = "[\"Admins\", \"Moderators\"]"
+  # Names of each team
+  NTBOT_FIRST_TEAM_NAME = "\"Jinrai\""
+  NTBOT_SECOND_TEAM_NAME = "\"NSF\""
 
 [experimental]
   allowed_public_ports = []
