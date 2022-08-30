@@ -8,6 +8,8 @@
 # discord-bot-ntpug
 Discord bot for organizing PUGs (pick-up games). Built for [Neotokyo](https://store.steampowered.com/app/244630/NEOTOKYO/), but should work for any two-team game with even number of players total.
 
+This project supports Python 3.8 or newer.
+
 # Usage
 ### Commands
 Commands are prefixed with a character defined by the config value `NTBOT_CMD_PREFIX`, by default `"!"`, so the command `pug` becomes `!pug` in the Discord chat, and so on.
