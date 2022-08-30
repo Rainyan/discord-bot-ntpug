@@ -46,6 +46,7 @@ kill_timeout = 5
 processes = []
 
 [build]
+  # https://hub.docker.com/repository/docker/rainrainrainrain/discord-bot-ntpug
   image = "rainrainrainrain/discord-bot-ntpug:latest"
 
 [env]
