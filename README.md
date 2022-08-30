@@ -26,17 +26,19 @@ The config values have been documented as comments in the [config.yml file](conf
 For running the bot, it's recommended to use the `main` branch.
 
 ### Remote deployment
-Some common deployment options, for your convenience:
+Some common deployment options listed below, for your convenience:
 
+#### Heroku
 [![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/Rainyan/discord-bot-ntpug/tree/main)
 
 Do note that Heroku will stop offering a free hosting tier by Nov 28, 2022.
 
+#### Docker image
 [![Docker](https://user-images.githubusercontent.com/6595066/187285611-b90ffa3f-80d0-4716-8bbf-837be43e31b2.png)](https://hub.docker.com/repository/docker/rainrainrainrain/discord-bot-ntpug)
 
-The Docker image linked above (`rainrainrainrain/discord-bot-ntpug:latest`) is compatible with the [fly.io tutorial](https://fly.io/docs/hands-on/start/), if you're unsure where to deploy. Just note that you'll have to escape the string quotes for env vars inside your fly.toml as `NTBOT_SECRET_TOKEN = "\"secret here\""`, etc. More info on this in the config.yml comments. Same applies for env variable input for other cloud providers.
+The Docker image linked above (`rainrainrainrain/discord-bot-ntpug:latest`) is compatible for example with the [fly.io tutorial](https://fly.io/docs/hands-on/start/), if you're looking for a place to host. Just note that you'll have to escape the string quotes for env vars inside your fly.toml as `NTBOT_SECRET_TOKEN = "\"secret here\""`, etc. More info on this quirk in the [config.yml](config.yml) comments. The same applies for env variable input for other cloud providers.
 
-Example fly.toml file:
+Example fly.toml file, for [fly.io](https://fly.io) deployments:
 ```toml
 app = "discord-bot-ntpug"
 kill_signal = "SIGINT"
