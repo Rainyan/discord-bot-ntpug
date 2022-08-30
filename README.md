@@ -6,7 +6,7 @@
 [![Docker pulls](https://img.shields.io/docker/pulls/rainrainrainrain/discord-bot-ntpug)](https://hub.docker.com/repository/docker/rainrainrainrain/discord-bot-ntpug)
 
 # discord-bot-ntpug
-Discord bot for organizing PUGs (pick-up games). Built for Neotokyo, but should work for any two-team game with even number of players total.
+Discord bot for organizing PUGs (pick-up games). Built for [Neotokyo](https://store.steampowered.com/app/244630/NEOTOKYO/), but should work for any two-team game with even number of players total.
 
 # Usage
 ### Commands
