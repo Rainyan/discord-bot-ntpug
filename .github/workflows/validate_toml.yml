@@ -28,4 +28,4 @@ jobs:
         python -m pip install --upgrade pip
         pip install --upgrade toml-validator
     - name: Validate TOML data
-      run: toml-validator|find -iname "*.toml"|xargs
+      run: find -iname "*.toml" | xargs -I {} sh -c "toml-validator {}"
