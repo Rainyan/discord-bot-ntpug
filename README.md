@@ -31,7 +31,7 @@ Some common deployment options listed below, for your convenience:
 #### Heroku
 [![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/Rainyan/discord-bot-ntpug/tree/main)
 
-Do note that Heroku will stop offering a free hosting tier by Nov 28, 2022.
+Do note that [Heroku will stop offering a free hosting tier](https://help.heroku.com/RSBRUH58/removal-of-heroku-free-product-plans-faq) by Nov 28, 2022.
 
 #### Docker image
 [![Docker](https://user-images.githubusercontent.com/6595066/187285611-b90ffa3f-80d0-4716-8bbf-837be43e31b2.png)](https://hub.docker.com/repository/docker/rainrainrainrain/discord-bot-ntpug)
