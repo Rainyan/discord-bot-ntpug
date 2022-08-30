@@ -3,7 +3,6 @@
 app = "discord-bot-ntpug"
 kill_signal = "SIGINT"
 kill_timeout = 5
-processes = []
 
 [build]
   # https://hub.docker.com/repository/docker/rainrainrainrain/discord-bot-ntpug
