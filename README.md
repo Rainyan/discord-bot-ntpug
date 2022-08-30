@@ -4,6 +4,8 @@
 [![Pylint](https://github.com/Rainyan/discord-bot-ntpug/actions/workflows/pylint.yml/badge.svg)](https://github.com/Rainyan/discord-bot-ntpug/actions/workflows/pylint.yml)
 [![JSON validation](https://github.com/Rainyan/discord-bot-ntpug/actions/workflows/validate_json.yml/badge.svg)](https://github.com/Rainyan/discord-bot-ntpug/actions/workflows/validate_json.yml)
 
+## NOTE! This deploy branch is now deprecated, and will be going away at some point. It's recommended you use the main branch for deploys, instead.
+
 # discord-bot-ntpug
 Discord bot for organizing PUGs (pick-up games). Built for Neotokyo, but should work for any two-team game with even number of players total.
 
