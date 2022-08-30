@@ -38,43 +38,7 @@ Do note that [Heroku will stop offering a free hosting tier](https://help.heroku
 
 The Docker image linked above (`rainrainrainrain/discord-bot-ntpug:latest`) is compatible for example with the [fly.io tutorial](https://fly.io/docs/hands-on/start/), if you're looking for a place to host. Just note that you'll have to escape the string quotes for env vars inside your fly.toml as `NTBOT_SECRET_TOKEN = "\"secret here\""`, etc. More info on this quirk in the [config.yml](config.yml) comments. The same applies for env variable input for other cloud providers.
 
-Example fly.toml file, for [fly.io](https://fly.io) deployments:
-```toml
-app = "discord-bot-ntpug"
-kill_signal = "SIGINT"
-kill_timeout = 5
-processes = []
-
-[build]
-  # https://hub.docker.com/repository/docker/rainrainrainrain/discord-bot-ntpug
-  image = "rainrainrainrain/discord-bot-ntpug:latest"
-
-[env]
-  # The Discord bot secret token goes here. Don't share this value with others.
-  # For info on how to generate this token, please see: https://discord.com/developers/docs
-  NTBOT_SECRET_TOKEN = "\"secret-token-goes-here\""
-  # Name of the Discord server channel that the bot listens to.
-  # This value has to be an exact match of the channel name.
-  NTBOT_PUG_CHANNEL = "\"pug-queue\""
-  # Number of players, total, that are required for a PUG match.
-  # For example, 10 for a 5v5. Needs to be an even number.
-  NTBOT_PLAYERS_REQUIRED_TOTAL = "10"
-  # Name of the puggers role. Used for pinging.
-  NTBOT_PUGGER_ROLE = "\"Puggers\""
-  # List of 0 or more PUG queue moderator/admin roles.
-  # If any user should be able to do PUG queue admin tasks, use an empty value.
-  NTBOT_PUG_ADMIN_ROLES = "[\"Admins\", \"Moderators\"]"
-  # Names of each team
-  NTBOT_FIRST_TEAM_NAME = "\"Jinrai\""
-  NTBOT_SECOND_TEAM_NAME = "\"NSF\""
-
-[experimental]
-  allowed_public_ports = []
-  auto_rollback = true
-
-[processes]
-  worker = "python bot.py"
-```
+Example fly.toml file, for [fly.io](https://fly.io) deployments, is [available here](examples/fly.toml).
 
 #### Manual installation
 Option to install and run manually in your machine/VM.
