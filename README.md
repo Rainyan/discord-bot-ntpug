@@ -25,7 +25,7 @@ The config values have been documented as comments in the [config.yml file](conf
 # Installation
 For running the bot, it's recommended to use the `main` branch.
 
-### Remote deployment
+### Deployment options
 Some common deployment options listed below, for your convenience:
 
 #### Heroku
@@ -76,8 +76,12 @@ processes = []
   worker = "python bot.py"
 ```
 
-### Manual installation
-```sh
+#### Manual installation
+Option to install and run manually in your machine/VM.
+
+```bash
+#!/usr/bin/env bash
+
 git clone https://github.com/Rainyan/discord-bot-ntpug
 cd discord-bot-ntpug
 python -m pip install --upgrade pip
