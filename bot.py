@@ -75,16 +75,10 @@ import pendulum
 from strictyaml import (as_document, load, Bool, EmptyList, Float, Int, Map,
                         Seq, Str)
 
-
-# May encounter breaking changes otherwise
-# NOTE: Discord API "decomissions" are scheduled for August 31, 2022:
-# https://github.com/discord/discord-api-docs/discussions/4510
-# Probably have to upgrade to pycord 2.X dev branch, or
-# some original discord.py project equivalent whenever it releases.
-assert discord.version_info.major == 1 and discord.version_info.minor == 7
+assert discord.version_info.major == 2
 
 SCRIPT_NAME = "NT Pug Bot"
-SCRIPT_VERSION = "0.17.1"
+SCRIPT_VERSION = "1.0.0"
 
 # The schema used for StrictYAML parsing.
 YAML_CFG_SCHEMA = {
@@ -103,6 +97,7 @@ YAML_CFG_SCHEMA = {
     "NTBOT_PING_PUGGERS_COOLDOWN_SECS": Float(),
     "NTBOT_FIRST_TEAM_NAME": Str(),
     "NTBOT_SECOND_TEAM_NAME": Str(),
+    "NTBOT_EPHEMERAL_MESSAGES": Bool(),
 }
 
 CFG_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)),
@@ -452,52 +447,53 @@ class PugStatus():
 pug_guilds = {}
 
 
-@bot.command(brief="Test if bot is active")
+@bot.slash_command(brief="Test if bot is active")
 async def ping(ctx):
     """Just a standard Discord bot ping test command for confirming whether
        the bot is online or not.
     """
-    await ctx.send("pong")
+    await ctx.send_response("pong", ephemeral=True)
 
 
-@bot.command(brief="Join the PUG queue")
+@bot.slash_command(brief="Join the PUG queue")
 async def pug(ctx):
-    """Player command for joining the PUG queue.
-    """
-    if ctx.guild not in pug_guilds or not ctx.channel.name == PUG_CHANNEL_NAME:
+    """Player command for joining the PUG queue."""
+    if not await is_pug_channel(ctx):
         return
     response = ""
     join_success, response = await pug_guilds[ctx.guild].player_join(
-        ctx.message.author)
+        ctx.user)
     if join_success:
-        response = (f"{ctx.message.author.name} has joined the PUG queue "
+        response = (f"{ctx.user.name} has joined the PUG queue "
                     f"({pug_guilds[ctx.guild].num_queued} / "
                     f"{pug_guilds[ctx.guild].num_expected})")
-    await ctx.send(f"{response}")
+    await ctx.send_response(content=response,
+                            ephemeral=cfg("NTBOT_EPHEMERAL_MESSAGES"))
 
 
-@bot.command(brief="Leave the PUG queue")
+@bot.slash_command(brief="Leave the PUG queue")
 async def unpug(ctx):
     """Player command for leaving the PUG queue.
     """
-    if ctx.guild not in pug_guilds or not ctx.channel.name == PUG_CHANNEL_NAME:
+    if not await is_pug_channel(ctx):
         return
 
     leave_success, msg = await pug_guilds[ctx.guild].player_leave(
-        ctx.message.author)
+        ctx.user)
     if leave_success:
-        msg = (f"{ctx.message.author.name} has left the PUG queue "
+        msg = (f"{ctx.user.name} has left the PUG queue "
                f"({pug_guilds[ctx.guild].num_queued} / "
                f"{pug_guilds[ctx.guild].num_expected})")
-    await ctx.send(msg)
+    await ctx.send_response(content=msg,
+                            ephemeral=cfg("NTBOT_EPHEMERAL_MESSAGES"))
 
 
-@bot.command(brief="Empty the server's PUG queue")
+@bot.slash_command(brief="Empty the server's PUG queue")
 async def clearpuggers(ctx):
     """Player command for clearing the PUG queue.
        This can be restricted to Discord guild specific admin roles.
     """
-    if ctx.guild not in pug_guilds or not ctx.channel.name == PUG_CHANNEL_NAME:
+    if not await is_pug_channel(ctx):
         return
 
     # If zero pug admin roles are configured, assume anyone can !clearpuggers
@@ -505,29 +501,32 @@ async def clearpuggers(ctx):
         is_allowed = True
     else:
         pug_admin_roles = [role.value for role in cfg("NTBOT_PUG_ADMIN_ROLES")]
-        user_roles = [role.name for role in ctx.message.author.roles]
+        user_roles = [role.name for role in ctx.user.roles]
         is_allowed = any(role in pug_admin_roles for role in user_roles)
 
     if is_allowed:
         await pug_guilds[ctx.guild].reset()
-        await ctx.send(f"{ctx.message.author.name} has reset the PUG queue")
+        await ctx.respond(f"{ctx.user.name} has reset the PUG queue")
     else:
-        await ctx.send(f"{ctx.message.author.mention} The PUG queue can only "
-                       f"be reset by users with role(s): _{pug_admin_roles}_")
+        await ctx.send_response(content=f"{ctx.user.mention} The PUG queue can only "
+                                        f"be reset by users with role(s): _{pug_admin_roles}_",
+                                ephemeral=cfg("NTBOT_EPHEMERAL_MESSAGES"))
 
 
-@bot.command(brief="Get new random teams suggestion for the latest PUG")
+@bot.slash_command(brief="Get new random teams suggestion for the latest PUG")
 async def scramble(ctx):
     """Player command for scrambling the latest full PUG queue.
        Can be called multiple times for generating new random teams.
     """
+    if not await is_pug_channel(ctx):
+        return
     msg = ""
     if len(pug_guilds[ctx.guild].prev_puggers) == 0:
-        msg = (f"{ctx.message.author.mention} Sorry, no previous PUG found to "
+        msg = (f"{ctx.user.mention} Sorry, no previous PUG found to "
                "scramble")
     else:
         random.shuffle(pug_guilds[ctx.guild].prev_puggers)
-        msg = f"{ctx.message.author.name} suggests scrambled teams:\n"
+        msg = f"{ctx.user.name} suggests scrambled teams:\n"
         msg += f"_(random shuffle id: {random_human_readable_phrase()})_\n"
         msg += "\n_" + FIRST_TEAM_NAME + " players:_\n"
         for i in range(int(len(pug_guilds[ctx.guild].prev_puggers) / 2)):
@@ -540,16 +539,13 @@ async def scramble(ctx):
         msg = msg[:-2]  # trailing ", "
         msg += ("\n\nTeams still unbalanced? Use **"
                 f"{bot.command_prefix}scramble** to suggest new random teams.")
-    await ctx.send(msg)
+    await ctx.respond(msg)
 
 
-@bot.command(brief="List players currently queueing for PUG")
+@bot.slash_command(brief="List players currently queueing for PUG")
 async def puggers(ctx):
     """Player command for listing players currently in the PUG queue.
     """
-    if ctx.guild not in pug_guilds or not ctx.channel.name == PUG_CHANNEL_NAME:
-        return
-
     msg = (f"{pug_guilds[ctx.guild].num_queued} / "
            f"{pug_guilds[ctx.guild].num_expected} player(s) currently "
            "queued")
@@ -561,36 +557,47 @@ async def puggers(ctx):
         for player in all_players_queued:
             msg += f"{player.name}, "
         msg = msg[:-2]  # trailing ", "
-    await ctx.send(msg)
+    # Respond ephemerally" if we aren't in a PUG channel context.
+    in_pug_channel = await is_pug_channel(ctx, respond=False)
+    await ctx.send_response(content=msg,
+                            ephemeral=(not in_pug_channel) or cfg("NTBOT_EPHEMERAL_MESSAGES"))
+
+
+async def is_pug_channel(ctx, respond=True):
+    """Returns whether the PUG bot should respond in this channel."""
+    if ctx.guild not in pug_guilds or ctx.channel.name != PUG_CHANNEL_NAME:
+        if respond:
+            await ctx.send_response(content=f"Sorry, this command can only be used on the channel: _{PUG_CHANNEL_NAME}_",
+                                    ephemeral=True)
+        return False
+    return True
 
 
 @commands.cooldown(rate=1, per=cfg("NTBOT_PING_PUGGERS_COOLDOWN_SECS"),
                    type=commands.BucketType.user)
-@bot.command(brief="Ping all players currently queueing for PUG")
-async def ping_puggers(ctx):
+@bot.slash_command(brief="Ping all players currently queueing for PUG")
+async def ping_puggers(ctx, message_to_other_players: discord.Option(str)):
     """Player command to ping all players currently inside the PUG queue.
     """
-    if ctx.guild not in pug_guilds or not ctx.channel.name == PUG_CHANNEL_NAME:
-        # Don't set cooldown for failed invocations.
-        ping_puggers.reset_cooldown(ctx)
+    if not await is_pug_channel(ctx):
+        ping_puggers.reset_cooldown(ctx)  # Don't set cooldown for failed invocations.
         return
 
     pug_admin_roles = [role.value for role in cfg("NTBOT_PUG_ADMIN_ROLES")]
-    user_roles = [role.name for role in ctx.message.author.roles]
+    user_roles = [role.name for role in ctx.author.roles]
     is_admin = any(role in pug_admin_roles for role in user_roles)
 
     # Only admins and players in the queue themselves are allowed to ping queue
     if not is_admin:
-        if ctx.message.author not in pug_guilds[ctx.guild].team1_players and \
-                ctx.message.author not in pug_guilds[ctx.guild].team2_players:
+        if ctx.user not in pug_guilds[ctx.guild].team1_players + pug_guilds[ctx.guild].team2_players:
             if pug_guilds[ctx.guild].num_queued == 0:
-                await ctx.send(f"{ctx.author.mention} PUG queue is currently "
-                               "empty.")
+                await ctx.respond(f"{ctx.user.mention} PUG queue is currently "
+                                  "empty.")
             else:
-                await ctx.send(f"{ctx.author.mention} Sorry, to be able to "
-                               "ping the PUG queue, you have to be queued "
-                               "yourself, or have the role(s): "
-                               f"_{pug_admin_roles}_")
+                await ctx.respond(f"{ctx.user.mention} Sorry, to be able to "
+                                  "ping the PUG queue, you have to be queued "
+                                  "yourself, or have the role(s): "
+                                  f"_{pug_admin_roles}_")
             ping_puggers.reset_cooldown(ctx)
             return
 
@@ -598,36 +605,30 @@ async def ping_puggers(ctx):
         # Comparing <=1 instead of 0 because it makes no sense to ping others
         # if you're the only one currently in the queue.
         if pug_guilds[ctx.guild].num_queued <= 1:
-            await ctx.send(f"{ctx.author.mention} There are no other players "
-                           "in the queue to ping!")
+            await ctx.respond(f"{ctx.user.mention} There are no other players "
+                              "in the queue to ping!")
             ping_puggers.reset_cooldown(ctx)
             return
-
-    # Require an info message instead of forcing pingees to spend time figuring
-    # out why they were pinged. We will construct a jump_url to this message.
-    args = ctx.message.content.split(" ", maxsplit=1)
-    if len(args) <= 1 or len(args[1].strip()) == 0:
-        await ctx.send(f"{ctx.author.mention} Please include a message after "
-                       "the command, describing why you pinged the PUG queue.")
-        ping_puggers.reset_cooldown(ctx)
-        return
 
     msg = ""
     async with pug_guilds[ctx.guild].lock:
         for player in [p for p in pug_guilds[ctx.guild].team1_players
-                       if p != ctx.author]:
+                       if p != ctx.user]:
             msg += f"{player.mention}, "
         for player in [p for p in pug_guilds[ctx.guild].team2_players
-                       if p != ctx.author]:
+                       if p != ctx.user]:
             msg += f"{player.mention}, "
         msg = msg[:-2]  # trailing ", "
 
-    msg += (f" User {ctx.author.mention} is pinging the PUG queue: "
-            f"{ctx.message.jump_url}")
-    await ctx.send(msg)
+    message_to_other_players = message_to_other_players.replace("`", "")
+    message_to_other_players = discord.utils.escape_markdown(message_to_other_players, ignore_links=False)
+
+    msg += (f" User {ctx.user.mention} is pinging the PUG queue with message:\n"
+            f"```{message_to_other_players}```")
     # No cooldown for admin pings.
     if is_admin:
         ping_puggers.reset_cooldown(ctx)
+    await ctx.respond(msg)
 
 
 def random_human_readable_phrase():
@@ -697,7 +698,7 @@ class PugQueueCog(commands.Cog):
            own independent player pools.
         """
         async with self.lock:
-            for guild in bot.guilds:
+            for guild in self.bot.guilds:
                 for channel in guild.channels:
                     if channel.name != PUG_CHANNEL_NAME:
                         continue
@@ -728,7 +729,7 @@ class PugQueueCog(commands.Cog):
         """Periodically clear inactive puggers from the queue(s).
         """
         async with self.lock:
-            for guild in bot.guilds:
+            for guild in self.bot.guilds:
                 if guild not in pug_guilds:
                     continue
                 if pug_guilds[guild].is_full:

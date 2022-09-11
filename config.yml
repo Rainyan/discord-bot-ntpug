@@ -27,7 +27,7 @@ NTBOT_PUG_CHANNEL: pug-queue
 NTBOT_PLAYERS_REQUIRED_TOTAL: 10
 
 # Debug command. Whether to allow the same player to repeatedly queue to fill up >1 slots,
-# for bot testing purposes. This should not be normally enabled.
+# for bot testing purposes. This should normally be disabled.
 NTBOT_DEBUG_ALLOW_REQUEUE: False
 
 # How often (in seconds) to check if there's enough players pugged up to start
@@ -66,3 +66,7 @@ NTBOT_PING_PUGGERS_COOLDOWN_SECS: 600.0
 # Names of each team
 NTBOT_FIRST_TEAM_NAME: Jinrai
 NTBOT_SECOND_TEAM_NAME: NSF
+
+# If set to False, will publicly announce people joining and leaving the PUG queue etc,
+# even if they use Discord's "silent" slash commands.
+NTBOT_EPHEMERAL_MESSAGES: True
