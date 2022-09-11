@@ -1,3 +1,10 @@
+# Note: deprecated branch
+
+This is a deprecated hotfix branch for cherrypicking some dependency bugfixes for the "deploy" branch. Users are recommended to use the superseding "main" branch, instead, which also includes these fixes. This branch is not supported anymore.
+
+
+- - -
+
 [![MIT](https://img.shields.io/github/license/Rainyan/discord-bot-ntpug)](LICENSE)
 [![PEP8](https://img.shields.io/badge/code%20style-pep8-orange.svg)](https://www.python.org/dev/peps/pep-0008/)
 [![CodeQL](https://github.com/Rainyan/discord-bot-ntpug/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/Rainyan/discord-bot-ntpug/actions/workflows/codeql-analysis.yml)
