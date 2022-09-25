@@ -76,11 +76,23 @@ assert discord.version_info.major == 2
 SCRIPT_NAME = "NT Pug Bot"
 SCRIPT_VERSION = "1.0.0"
 
+
+class PositiveEvenInt(Int):
+    """StrictYAML validator for positive, even integers."""
+    def validate_scalar(self, chunk):
+        val = super().validate_scalar(chunk)
+        if val <= 0:
+            chunk.expecting_but_found("when expecting a positive integer")
+        if val % 2 != 0:
+            chunk.expecting_but_found("when expecting an even integer")
+        return val
+
+
 # The schema used for StrictYAML parsing.
 YAML_CFG_SCHEMA = {
     "NTBOT_SECRET_TOKEN": Str(),
     "NTBOT_PUG_CHANNEL": Str(),
-    "NTBOT_PLAYERS_REQUIRED_TOTAL": Int(),
+    "NTBOT_PLAYERS_REQUIRED_TOTAL": PositiveEvenInt(),
     "NTBOT_DEBUG_ALLOW_REQUEUE": Bool(),
     "NTBOT_POLLING_INTERVAL_SECS": Int(),
     "NTBOT_PRESENCE_INTERVAL_SECS": Int(),
@@ -125,8 +137,6 @@ def cfg(key):
 
 bot = commands.Bot(case_insensitive=True)
 NUM_PLAYERS_REQUIRED = cfg("NTBOT_PLAYERS_REQUIRED_TOTAL")
-assert NUM_PLAYERS_REQUIRED > 0, "Need positive number of players"
-assert NUM_PLAYERS_REQUIRED % 2 == 0, "Need even number of players"
 DEBUG_ALLOW_REQUEUE = cfg("NTBOT_DEBUG_ALLOW_REQUEUE")
 PUG_CHANNEL_NAME = cfg("NTBOT_PUG_CHANNEL")
 BOT_SECRET_TOKEN = cfg("NTBOT_SECRET_TOKEN")
