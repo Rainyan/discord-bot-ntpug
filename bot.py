@@ -229,7 +229,8 @@ class PugStatus():
         def is_pug_reset(msg):
             """Predicate for whether a message signals PUG reset.
             """
-            return msg.author.bot and msg.content.endswith("has reset the PUG queue")
+            return (msg.author.bot and
+                    msg.content.endswith("has reset the PUG queue"))
 
         def is_pug_start(msg):
             """Predicate for whether a message signals PUG start.
