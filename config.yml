@@ -15,9 +15,6 @@
 # For info on how to generate this token, please see: https://discord.com/developers/docs
 NTBOT_SECRET_TOKEN: ""
 
-# The first character of bot commands, for example "!" for "!pug".
-NTBOT_CMD_PREFIX: "!"
-
 # Name of the Discord server channel that the bot listens to.
 # This value has to be an exact match of the channel name.
 NTBOT_PUG_CHANNEL: pug-queue

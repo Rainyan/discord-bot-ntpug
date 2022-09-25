@@ -5,11 +5,7 @@
    of players total.
 
    Usage:
-     Commands:
-       Commands are prefixed with a character defined by the config value
-       "NTBOT_CMD_PREFIX", by default "!", so the command pug becomes "!pug" in
-       the Discord chat, and so on.
-
+     Slash commands:
        - clearpuggers — Empty the PUG queue.
                         Command access can be restricted by role(s) with the
                         config value NTBOT_PUG_ADMIN_ROLES.
@@ -83,7 +79,6 @@ SCRIPT_VERSION = "1.0.0"
 # The schema used for StrictYAML parsing.
 YAML_CFG_SCHEMA = {
     "NTBOT_SECRET_TOKEN": Str(),
-    "NTBOT_CMD_PREFIX": Str(),
     "NTBOT_PUG_CHANNEL": Str(),
     "NTBOT_PLAYERS_REQUIRED_TOTAL": Int(),
     "NTBOT_DEBUG_ALLOW_REQUEUE": Bool(),
@@ -128,8 +123,7 @@ def cfg(key):
     return CFG[key].value
 
 
-bot = commands.Bot(command_prefix=cfg("NTBOT_CMD_PREFIX"),
-                   case_insensitive=True)
+bot = commands.Bot(case_insensitive=True)
 NUM_PLAYERS_REQUIRED = cfg("NTBOT_PLAYERS_REQUIRED_TOTAL")
 assert NUM_PLAYERS_REQUIRED > 0, "Need positive number of players"
 assert NUM_PLAYERS_REQUIRED % 2 == 0, "Need even number of players"
