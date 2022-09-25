@@ -84,7 +84,7 @@ from strictyaml import (as_document, load, Bool, EmptyList, Float, Int, Map,
 assert discord.version_info.major == 1 and discord.version_info.minor == 7
 
 SCRIPT_NAME = "NT Pug Bot"
-SCRIPT_VERSION = "0.17.1"
+SCRIPT_VERSION = "0.17.2"
 
 # The schema used for StrictYAML parsing.
 YAML_CFG_SCHEMA = {
@@ -226,6 +226,12 @@ class PugStatus():
             """
             return msg.content == f"{bot.command_prefix}{cmd}"
 
+        def is_pug_reset(msg):
+            """Predicate for whether a message signals PUG reset.
+            """
+            return (msg.author.bot and
+                    msg.content.endswith("has reset the PUG queue"))
+
         def is_pug_start(msg):
             """Predicate for whether a message signals PUG start.
             """
@@ -250,8 +256,9 @@ class PugStatus():
                                                         oldest_first=True).\
                     filter(lambda msg: any((is_cmd(msg, "pug"),
                                             is_cmd(msg, "unpug"),
+                                            is_pug_reset(msg),
                                             is_pug_start(msg)))):
-                if is_pug_start(msg):
+                if is_pug_reset(msg) or is_pug_start(msg):
                     await self.reset()
                 elif is_cmd(msg, "pug"):
                     await self.player_join(msg.author)
