@@ -1,0 +1,71 @@
+# Phrases used by the bot.
+# If localizing, note that the placeholder variables ({0}, {1}, {2}, ...)
+# will be filled in ascending numerical order, so they can be rearranged as
+# required.
+
+PING_PUGGERS: >
+  {0} Need **{1} more puggers** for a game!\n
+  _(This is an automatic ping to all puggers,
+  because the PUG queue is {2}% full.\n
+  Rest assured, I will only ping you once per
+  {3} hours, at most.\n
+  If you don't want any of these notifications,
+  please consider temporarily muting this bot
+  or leaving the {4} server role.)_
+
+SUGGEST_SCRAMBLE: >
+  Teams unbalanced? Use **{0}{1}** to suggest new random teams.
+
+SUGGEST_SCRAMBLE_AGAIN: >
+  Teams still unbalanced? Use **{0}{1}** to suggest new random teams.
+
+WRONG_CHANNEL: >
+  Sorry, this command can only be used in channel(s): _{0}_
+
+CANT_PING_WHILST_UNQUEUED: >
+  Sorry, to be able to ping the PUG queue, you have to also be queued yourself,
+  or have the role(s): _{0}_
+
+CANT_PING_ALONE: >
+  There are no other players in the PUG queue to ping!
+
+PING: >
+  User {0} is pinging the PUG queue with message:\n{1}
+
+CANT_RESET_QUEUE: >
+  The PUG queue can only be reset by users with role(s): _{0}_
+
+LEFT_QUEUE: >
+  You have left the PUG queue
+
+# Number or queued/required inside the braces.
+JOINED_QUEUE: >
+  You have joined the PUG queue ({0} / {1})
+
+# Bot status message of "Watching (...)"
+PRESENCE_STATUS_WAITING: >
+  for {0} more pugger
+
+# Append "s" for the "puggers" plural form.
+PRESENCE_STATUS_WAITING_PLURAL: >
+  s
+
+# Append exclamation mark if one more pugger needed.
+PRESENCE_STATUS_WAITING_ONE_MORE: >
+  !
+
+# Bot status message of "Now playing: (...)"
+PRESENCE_STATUS_PLAYING: >
+  a PUG! 🐩
+
+QUEUE_FULL: >
+  Sorry, this PUG queue is currently full!
+
+ALREADY_QUEUED: >
+  You are already queued! If you wanted to un-PUG, please use **{0}}** instead.
+
+ALREADY_NOT_QUEUED: >
+  You are not currently in the PUG queue.
+
+PUG_IS_READY: >
+  **PUG is now ready!**
