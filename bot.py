@@ -222,6 +222,12 @@ class PugStatus():
             """
             return msg.content == f"{bot.command_prefix}{cmd}"
 
+        def is_pug_reset(msg):
+            """Predicate for whether a message signals PUG reset.
+            """
+            return (msg.author.bot and
+                    msg.content.endswith("has reset the PUG queue"))
+
         def is_pug_start(msg):
             """Predicate for whether a message signals PUG start.
             """
@@ -246,8 +252,9 @@ class PugStatus():
                                                         oldest_first=True).\
                     filter(lambda msg: any((is_cmd(msg, "pug"),
                                             is_cmd(msg, "unpug"),
+                                            is_pug_reset(msg),
                                             is_pug_start(msg)))):
-                if is_pug_start(msg):
+                if is_pug_reset(msg) or is_pug_start(msg):
                     await self.reset()
                 elif is_cmd(msg, "pug"):
                     await self.player_join(msg.author)
