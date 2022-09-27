@@ -60,7 +60,7 @@
 
 from ast import literal_eval
 import asyncio
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 import os
 import time
 import random
@@ -215,10 +215,7 @@ class PugStatus():
         """
         limit_hrs = cfg("NTBOT_IDLE_THRESHOLD_HOURS")
         assert limit_hrs > 0
-        after = pendulum.now().subtract(hours=limit_hrs)
-        # Because Pycord 1.7.3 wants non timezone aware "after" date.
-        after = datetime.fromisoformat(after.in_timezone("UTC").isoformat())
-        after = after.replace(tzinfo=None)
+        after = datetime.now() - timedelta(hours=limit_hrs)
 
         def is_cmd(msg, cmd):
             """Predicate for whether message equals a specific PUG command.
@@ -380,22 +377,15 @@ class PugStatus():
         """Returns a datetime.timedelta of latest role ping, or None if no such
            ping was found.
         """
-        after = pendulum.now().subtract(
+        after = datetime.now() - timedelta(
             hours=cfg("NTBOT_PUGGER_ROLE_PING_MIN_INTERVAL_HOURS"))
-        # Because Pycord 1.7.3 wants non timezone aware "after" date.
-        after = datetime.fromisoformat(after.in_timezone("UTC").isoformat())
-        after = after.replace(tzinfo=None)
-
         try:
             async for msg in self.guild_channel.history(limit=None,
                                                         after=after,
-                                                        oldest_first=False):
-                if PUGGER_ROLE in [role.name for role in msg.role_mentions]:
-                    # Because Pycord 1.7.3 returns non timezone aware UTC date,
-                    # and we need to subtract a timedelta using it.
-                    naive_utc_now = datetime.now(timezone.utc)
-                    naive_utc_now = naive_utc_now.replace(tzinfo=None)
-                    return naive_utc_now - msg.created_at
+                                                        oldest_first=False).\
+                    filter(lambda msg: PUGGER_ROLE in [role.name for role in
+                                                       msg.role_mentions]):
+                return datetime.now(timezone.utc) - msg.created_at
         except discord.errors.HTTPException as err:
             # If it's not a library error, and we got a HTTP 5xx response,
             # err on the side of caution and treat it as if we found a recent
@@ -405,7 +395,7 @@ class PugStatus():
             # side error logs cleaner since the Discord bugs aren't really
             # actionable for us as the API user.
             if err.code == 0 and str(err.status)[:1] == "5":
-                return datetime.timedelta()
+                return timedelta()
             raise err
         return None
 
