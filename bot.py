@@ -61,6 +61,7 @@
 from ast import literal_eval
 import asyncio
 from datetime import datetime, timedelta, timezone
+import inspect
 import os
 import time
 import random
@@ -77,14 +78,16 @@ SCRIPT_NAME = "NT Pug Bot"
 SCRIPT_VERSION = "1.0.0"
 
 
-class PositiveEvenInt(Int):
-    """StrictYAML validator for positive, even integers."""
+class PredicatedInt(Int):
+    """StrictYAML Int validator, with optional predicates."""
+    def __init__(self, predicates = None):
+        self.predicates = predicates if predicates is not None else []
+
     def validate_scalar(self, chunk):
         val = super().validate_scalar(chunk)
-        if val <= 0:
-            chunk.expecting_but_found("when expecting a positive integer")
-        if val % 2 != 0:
-            chunk.expecting_but_found("when expecting an even integer")
+        for pred in self.predicates:
+            if not pred(val):
+                chunk.expecting_but_found(str(inspect.getsourcelines(pred)[0]))
         return val
 
 
@@ -92,7 +95,8 @@ class PositiveEvenInt(Int):
 YAML_CFG_SCHEMA = {
     "NTBOT_SECRET_TOKEN": Str(),
     "NTBOT_PUG_CHANNEL": Str(),
-    "NTBOT_PLAYERS_REQUIRED_TOTAL": PositiveEvenInt(),
+    "NTBOT_PLAYERS_REQUIRED_TOTAL": PredicatedInt([lambda x: x > 0,
+                                                   lambda x: x % 2 == 0]),
     "NTBOT_DEBUG_ALLOW_REQUEUE": Bool(),
     "NTBOT_POLLING_INTERVAL_SECS": Int(),
     "NTBOT_PRESENCE_INTERVAL_SECS": Int(),
