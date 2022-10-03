@@ -104,7 +104,7 @@ YAML_CFG_SCHEMA = {
     "NTBOT_PUGGER_ROLE_PING_THRESHOLD": Float(),
     "NTBOT_PUGGER_ROLE_PING_MIN_INTERVAL_HOURS": Float(),
     "NTBOT_PUG_ADMIN_ROLES": Seq(Str()) | EmptyList(),
-    "NTBOT_IDLE_THRESHOLD_HOURS": Int(),
+    "NTBOT_IDLE_THRESHOLD_HOURS": Float(),
     "NTBOT_PING_PUGGERS_COOLDOWN_SECS": Float(),
     "NTBOT_FIRST_TEAM_NAME": Str(),
     "NTBOT_SECOND_TEAM_NAME": Str(),
@@ -737,7 +737,7 @@ class PugQueueCog(commands.Cog):
                         await pug_guilds[guild].update_presence()
                         await pug_guilds[guild].ping_role()
 
-    @tasks.loop(hours=1)
+    @tasks.loop(hours=(cfg("NTBOT_IDLE_THRESHOLD_HOURS") / 2))
     async def clear_inactive_puggers(self):
         """Periodically clear inactive puggers from the queue(s).
         """

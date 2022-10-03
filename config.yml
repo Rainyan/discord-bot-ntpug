@@ -53,8 +53,8 @@ NTBOT_PUG_ADMIN_ROLES:
     - Moderators
 
 # How long to keep idle puggers in the queue before automatically un-queueing them,
-# in full hours. Has to be a positive integer.
-NTBOT_IDLE_THRESHOLD_HOURS: 16
+# in full hours. Has to be a positive floating point value.
+NTBOT_IDLE_THRESHOLD_HOURS: 16.0
 
 # How often can PUG queuers bulk-ping all the other players currently in the queue, in seconds.
 # Admins with role(s) defined by "NTBOT_PUG_ADMIN_ROLES" are not affected by this time limit.
