@@ -1,6 +1,7 @@
 """Generic utilities for the pug bot."""
 
 import os
+import random
 
 
 def random_human_readable_phrase():
