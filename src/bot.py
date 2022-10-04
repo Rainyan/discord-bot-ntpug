@@ -68,7 +68,7 @@ from discord.ext import commands, tasks
 import pendulum
 
 from config import cfg
-from pug import PugStatus, bot_init
+from pug import (PugStatus, bot_init)
 from util import random_human_readable_phrase
 
 

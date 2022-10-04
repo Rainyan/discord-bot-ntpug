@@ -32,7 +32,7 @@ YAML_CFG_SCHEMA = {
     "NTBOT_PUG_CHANNEL": Str(),
     "NTBOT_PLAYERS_REQUIRED_TOTAL": PredicatedInt([lambda x: x > 0,
                                                    lambda x: x % 2 == 0]),
-    "NTBOT_DEBUG_ALLOW_REQUEUE": Bool(),
+    "NTBOT_DEBUG": Bool(),
     "NTBOT_POLLING_INTERVAL_SECS": Int(),
     "NTBOT_PRESENCE_INTERVAL_SECS": Int(),
     "NTBOT_PUGGER_ROLE": Str(),

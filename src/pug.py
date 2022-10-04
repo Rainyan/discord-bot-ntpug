@@ -61,7 +61,7 @@ class PugStatus():
         print(queued_plrs)
 
         async with self.lock:
-            if not cfg("NTBOT_DEBUG_ALLOW_REQUEUE") and \
+            if not cfg("NTBOT_DEBUG") and \
                     (player in self.team1_players or
                      player in self.team2_players):
                 return False, (f"{player.mention} You are already queued! "

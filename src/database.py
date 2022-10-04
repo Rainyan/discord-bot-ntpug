@@ -1,6 +1,7 @@
 """This module abstracts the database driver logic for accessing the PUG data.
 """
 
+from abc import ABC, abstractmethod
 import asyncio
 import sqlite3
 
@@ -9,19 +10,23 @@ import psycopg2
 from config import cfg
 
 
-class DbDriver():
+class DbDriver(ABC):
     """Abstract DB driver base. All DB drivers should inherit from this."""
     def __init__(self):
         self.lock = asyncio.Lock()
+        self.conn = None
         self.open_database()
 
     def __del__(self):
         self.close_database()
 
     def open_database(self):
+        """Open the DB connection, and create the DB if it doesn't exist yet.
+        """
         self.table = cfg("NTBOT_DB_TABLE")
         cur = self.conn.cursor()
-        if True:  # DEBUG
+        # NOTE: Purges all DB data for debug.
+        if cfg("NTBOT_DEBUG"):
             cur.execute(f"DROP TABLE IF EXISTS {self.table};")
         cur.execute(f"""CREATE TABLE IF NOT EXISTS {self.table} (
                            id serial PRIMARY KEY,
@@ -32,6 +37,7 @@ class DbDriver():
         cur.close()
 
     def close_database(self):
+        """Close the DB if it was opened."""
         if hasattr(self, "conn"):
             self.conn.close()
 
@@ -55,6 +61,10 @@ class DbDriver():
         await self._execute(f"""INSERT INTO {self.table} (user_id) VALUES (%s)
                             ON CONFLICT (user_id) DO UPDATE SET is_queued = %s;""",
                             (discord_id, is_queued))
+
+    @abstractmethod
+    async def _execute(self, query, my_vars=None):
+        pass
 
 
 class Sqlite3(DbDriver):

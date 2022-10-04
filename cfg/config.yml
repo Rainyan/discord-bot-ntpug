@@ -23,9 +23,9 @@ NTBOT_PUG_CHANNEL: pug-queue
 # For example, 10 for a 5v5. Needs to be an even number.
 NTBOT_PLAYERS_REQUIRED_TOTAL: 10
 
-# Debug command. Whether to allow the same player to repeatedly queue to fill up >1 slots,
-# for bot testing purposes. This should normally be disabled.
-NTBOT_DEBUG_ALLOW_REQUEUE: False
+# Allow various debug modes. This should always be set to False, 
+# unless you are writing code for this project and know you need to edit this.
+NTBOT_DEBUG: False
 
 # How often (in seconds) to check if there's enough players pugged up to start
 # playing.
