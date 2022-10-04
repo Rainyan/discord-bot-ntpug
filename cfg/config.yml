@@ -67,3 +67,11 @@ NTBOT_SECOND_TEAM_NAME: NSF
 # If set to False, will publicly announce people joining and leaving the PUG queue etc,
 # even if they use Discord's "silent" slash commands.
 NTBOT_EPHEMERAL_MESSAGES: True
+
+NTBOT_DB_DRIVER: "sqlite3"
+NTBOT_DB_USER: "postgres"
+NTBOT_DB_NAME: "postgres"
+NTBOT_DB_SECRET: ""
+NTBOT_DB_TABLE: "puggers"
+NTBOT_DB_HOST: "localhost"
+NTBOT_DB_PORT: 5432
