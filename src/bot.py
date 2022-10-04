@@ -87,10 +87,6 @@ assert len(PUGGER_ROLE) > 0
 FIRST_TEAM_NAME = cfg("NTBOT_FIRST_TEAM_NAME")
 SECOND_TEAM_NAME = cfg("NTBOT_SECOND_TEAM_NAME")
 
-# This is a variable because the text is used for detecting previous PUGs
-# when restoring status during restart.
-PUG_READY_TITLE = "**PUG is now ready!**"
-
 print(f"Now running {SCRIPT_NAME} v.{SCRIPT_VERSION}", flush=True)
 
 pug_guilds = {}

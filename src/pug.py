@@ -11,6 +11,10 @@ from config import cfg
 from database import Postgres, Sqlite3
 
 
+# This is a variable because the text is used for detecting previous PUGs
+# when restoring status during restart.
+PUG_READY_TITLE = "**PUG is now ready!**"
+
 DB = None
 match cfg("NTBOT_DB_DRIVER"):
     case "postgres":
@@ -195,11 +199,11 @@ class PugStatus():
                 await self.reset()
                 return False, "Error: team was empty"
             msg = f"{PUG_READY_TITLE}\n"
-            msg += "\n_" + FIRST_TEAM_NAME + " players:_\n"
+            msg += "\n_" + cfg("NTBOT_FIRST_TEAM_NAME") + " players:_\n"
             for player in self.team1_players:
                 msg += f"{player.mention}, "
             msg = msg[:-2]  # trailing ", "
-            msg += "\n_" + SECOND_TEAM_NAME + " players:_\n"
+            msg += "\n_" + cfg("NTBOT_SECOND_TEAM_NAME") + " players:_\n"
             for player in self.team2_players:
                 msg += f"{player.mention}, "
             msg = msg[:-2]  # trailing ", "
@@ -263,7 +267,7 @@ class PugStatus():
             async for msg in self.guild_channel.history(limit=None,
                                                         after=after,
                                                         oldest_first=False).\
-                    filter(lambda msg: PUGGER_ROLE in [role.name for role in
+                    filter(lambda msg: cfg("NTBOT_PUGGER_ROLE") in [role.name for role in
                                                        msg.role_mentions]):
                 return datetime.now(timezone.utc) - msg.created_at
         except discord.errors.HTTPException as err:
@@ -300,7 +304,7 @@ class PugStatus():
                     return
 
             for role in self.guild_roles:
-                if role.name == PUGGER_ROLE:
+                if role.name == cfg("NTBOT_PUGGER_ROLE"):
                     min_nag_hours = f"{hours_limit:.1f}"
                     min_nag_hours = min_nag_hours.rstrip("0").rstrip(".")
                     msg = (f"{role.mention} Need **"
@@ -319,24 +323,26 @@ class PugStatus():
 
 
 class BotContainer():
-    def __init__(self, bot, secret_token, cogs=None):
+    """HACK: Kludge for getting this thing to work; should revisit"""
+    def __init__(self, the_bot, secret_token, cogs=None):
+        self.bot = the_bot
         for cog in cogs:
-            bot.add_cog(cog(bot))
-        bot.run(secret_token)
-        self.bot = bot
+            self.bot.add_cog(cog(self.bot))
+        self.bot.run(secret_token)
 
 
 BOT = None
 
 
-def bot_init(bot, secret_token, cogs=None):
+def bot_init(the_bot, secret_token, cogs=None):
+    """Initialize and return the bot instance."""
     global BOT
     assert BOT is None
-    BOT = BotContainer(bot, secret_token, cogs)
+    BOT = BotContainer(the_bot, secret_token, cogs)
     return BOT
 
 
 @property
 def bot():
-    global BOT
+    """Accessor for the bot instance."""
     return BOT
