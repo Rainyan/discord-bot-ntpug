@@ -36,8 +36,6 @@
        https://github.com/Rainyan/discord-bot-ntpug
 """
 
-# FIXME: bot.command_prefix is now returning a function signature for some reason?
-
 # MIT License
 #
 # Copyright (c) 2021- https://github.com/Rainyan
@@ -79,12 +77,13 @@ SCRIPT_VERSION = "1.0.0"
 
 
 # TODO: confirm what we actually need; remove unnecessary
-INTENTS = discord.Intents.none()
-INTENTS.messages = True  # for legacy !commands
-INTENTS.message_content = True  # for legacy !commands
+# INTENTS = discord.Intents.none()
+# INTENTS.messages = True  # for legacy !commands
+# INTENTS.message_content = True  # for legacy !commands
+# INTENTS.presences = True  # for the queue status announces, etc.
 
-bot = commands.Bot(case_insensitive=True,
-                   intents=INTENTS)
+bot = commands.Bot(case_insensitive=True)#,
+                   #intents=INTENTS)
 
 
 @bot.event
@@ -209,8 +208,8 @@ async def scramble(ctx):
                        len(pug_guilds[ctx.guild].prev_puggers)):
             msg += f"{pug_guilds[ctx.guild].prev_puggers[i].name}, "
         msg = msg[:-2]  # trailing ", "
-        msg += ("\n\nTeams still unbalanced? Use **"
-                f"{bot.command_prefix}scramble** to suggest new random teams.")
+        msg += ("\n\nTeams still unbalanced? Use "
+                "`/scramble` to suggest new random teams.")
     await ctx.respond(msg)
 
 

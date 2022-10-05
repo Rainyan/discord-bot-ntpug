@@ -69,8 +69,7 @@ class PugStatus():
                     (player in self.team1_players or
                      player in self.team2_players):
                 return False, (f"{player.mention} You are already queued! "
-                               "If you wanted to un-PUG, please use **"
-                               f"{bot.command_prefix}unpug** "
+                               "If you wanted to un-PUG, please use `unpug` "
                                "instead.")
             if team is None:
                 team = random.randint(0, 1)  # flip a coin between team1/team2
@@ -90,6 +89,8 @@ class PugStatus():
            bot restart, but also for dropping inactive players from the queue
            after inactivity of "NTBOT_IDLE_THRESHOLD_HOURS" period.
         """
+        return  # FIXME: update to use database logic!!!
+
         limit_hrs = cfg("NTBOT_IDLE_THRESHOLD_HOURS")
         assert limit_hrs > 0
         after = datetime.now() - timedelta(hours=limit_hrs)
@@ -252,6 +253,8 @@ class PugStatus():
             presence["activity"] = activity
             presence["status"] = status
 
+            # BUG: should refactor the bot property hack to something that works
+            # as we can't access the method change_presence like this
             await bot.change_presence(activity=presence["activity"],
                                       status=presence["status"])
             self.last_presence = presence
