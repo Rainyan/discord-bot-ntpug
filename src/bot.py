@@ -68,7 +68,7 @@ from discord.ext import commands, tasks
 import pendulum
 
 from config import cfg
-from pug import (PugStatus, bot_init)
+from pug import PugStatus, bot_init
 from util import random_human_readable_phrase
 
 
@@ -77,7 +77,34 @@ assert discord.version_info.major == 2
 SCRIPT_NAME = "NT Pug Bot"
 SCRIPT_VERSION = "1.0.0"
 
-bot = commands.Bot(case_insensitive=True)
+
+# TODO: confirm what we actually need; remove unnecessary
+INTENTS = discord.Intents.none()
+INTENTS.messages = True  # for legacy !commands
+INTENTS.message_content = True  # for legacy !commands
+
+bot = commands.Bot(case_insensitive=True,
+                   intents=INTENTS)
+
+
+@bot.event
+async def on_message(msg):
+    """Used to notify users of the ongoing migration to Discord slash commands.
+    """
+    if msg.author.bot:
+        return
+    cmds = ["!"+x for x in
+            ("pug", "unpug", "puggers", "clearpuggers", "ping_puggers")]
+    if not msg.content in cmds:
+        return
+    # TODO: add the help page
+    # TODO: refactor into a command group, "/pug join", "/pug leave" etc.
+    await msg.channel.send(f"{msg.author.mention} I am migrating to the new "
+                           "Discord slash command syntax; please use the "
+                           "new `/pug` command group, instead!\nFor more "
+                           "info, see the `/pug help` page.")
+
+
 PUG_CHANNEL_NAME = cfg("NTBOT_PUG_CHANNEL")
 BOT_SECRET_TOKEN = cfg("NTBOT_SECRET_TOKEN")
 assert 0 <= cfg("NTBOT_PUGGER_ROLE_PING_THRESHOLD") <= 1
