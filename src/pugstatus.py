@@ -9,20 +9,11 @@ import discord
 
 from config import cfg
 import bot_instance
-from database import Postgres, Sqlite3
 
 
 # This is a variable because the text is used for detecting previous PUGs
 # when restoring status during restart.
 PUG_READY_TITLE = "**PUG is now ready!**"
-
-DB = None
-match cfg("NTBOT_DB_DRIVER"):
-    case "postgres":
-        DB = Postgres()
-    case "sqlite3":
-        DB = Sqlite3()
-assert DB is not None
 
 
 class PugStatus():
@@ -59,12 +50,6 @@ class PugStatus():
            to a random team to wait in, until the PUG is ready to be started.
            The specific team rosters can later be shuffled by a !scramble.
         """
-        queued_plrs = await DB.get_discord_user()
-        print(queued_plrs)
-        await DB.set_discord_user(player.id, True)
-        queued_plrs = await DB.get_discord_user()
-        print(queued_plrs)
-
         async with self.lock:
             if not cfg("NTBOT_DEBUG") and \
                     (player in self.team1_players or

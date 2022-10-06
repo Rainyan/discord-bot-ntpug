@@ -66,6 +66,7 @@ from discord.ext import commands, tasks
 import pendulum
 
 from config import cfg
+import database
 import pugstatus
 import bot_instance
 from util import random_human_readable_phrase
@@ -131,6 +132,13 @@ async def ping(ctx):
 @bot_instance.BOT.slash_command(brief="Join the PUG queue")
 async def pug(ctx):
     """Player command for joining the PUG queue."""
+
+    print("Trying new db method:")
+    async with database.DB(ctx.guild.id) as db:
+        res = await db.get_discord_user(ctx.user.id)
+        print(res)
+    print("End of test")
+
     if not await is_pug_channel(ctx):
         return
     response = ""
