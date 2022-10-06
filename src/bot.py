@@ -66,7 +66,8 @@ from discord.ext import commands, tasks
 import pendulum
 
 from config import cfg
-from pug import PugStatus, bot_init
+import pugstatus
+import bot_instance
 from util import random_human_readable_phrase
 
 
@@ -82,11 +83,13 @@ SCRIPT_VERSION = "1.0.0"
 # INTENTS.message_content = True  # for legacy !commands
 # INTENTS.presences = True  # for the queue status announces, etc.
 
-bot = commands.Bot(case_insensitive=True)#,
+assert bot_instance.BOT is None
+bot_instance.BOT = commands.Bot(case_insensitive=True)#,
                    #intents=INTENTS)
+assert bot_instance.BOT is not None
 
 
-@bot.event
+@bot_instance.BOT.event
 async def on_message(msg):
     """Used to notify users of the ongoing migration to Discord slash commands.
     """
@@ -117,7 +120,7 @@ print(f"Now running {SCRIPT_NAME} v.{SCRIPT_VERSION}", flush=True)
 
 pug_guilds = {}
 
-@bot.slash_command(brief="Test if bot is active")
+@bot_instance.BOT.slash_command(brief="Test if bot is active")
 async def ping(ctx):
     """Just a standard Discord bot ping test command for confirming whether
        the bot is online or not.
@@ -125,7 +128,7 @@ async def ping(ctx):
     await ctx.send_response("pong", ephemeral=True)
 
 
-@bot.slash_command(brief="Join the PUG queue")
+@bot_instance.BOT.slash_command(brief="Join the PUG queue")
 async def pug(ctx):
     """Player command for joining the PUG queue."""
     if not await is_pug_channel(ctx):
@@ -141,7 +144,7 @@ async def pug(ctx):
                             ephemeral=cfg("NTBOT_EPHEMERAL_MESSAGES"))
 
 
-@bot.slash_command(brief="Leave the PUG queue")
+@bot_instance.BOT.slash_command(brief="Leave the PUG queue")
 async def unpug(ctx):
     """Player command for leaving the PUG queue.
     """
@@ -158,7 +161,7 @@ async def unpug(ctx):
                             ephemeral=cfg("NTBOT_EPHEMERAL_MESSAGES"))
 
 
-@bot.slash_command(brief="Empty the server's PUG queue")
+@bot_instance.BOT.slash_command(brief="Empty the server's PUG queue")
 async def clearpuggers(ctx):
     """Player command for clearing the PUG queue.
        This can be restricted to Discord guild specific admin roles.
@@ -184,7 +187,7 @@ async def clearpuggers(ctx):
                                 ephemeral=cfg("NTBOT_EPHEMERAL_MESSAGES"))
 
 
-@bot.slash_command(brief="Get new random teams suggestion for the latest PUG")
+@bot_instance.BOT.slash_command(brief="Get new random teams suggestion for the latest PUG")
 async def scramble(ctx):
     """Player command for scrambling the latest full PUG queue.
        Can be called multiple times for generating new random teams.
@@ -213,7 +216,7 @@ async def scramble(ctx):
     await ctx.respond(msg)
 
 
-@bot.slash_command(brief="List players currently queueing for PUG")
+@bot_instance.BOT.slash_command(brief="List players currently queueing for PUG")
 async def puggers(ctx):
     """Player command for listing players currently in the PUG queue.
     """
@@ -249,7 +252,7 @@ async def is_pug_channel(ctx, respond=True):
 
 @commands.cooldown(rate=1, per=cfg("NTBOT_PING_PUGGERS_COOLDOWN_SECS"),
                    type=commands.BucketType.user)
-@bot.slash_command(brief="Ping all players currently queueing for PUG")
+@bot_instance.BOT.slash_command(brief="Ping all players currently queueing for PUG")
 # pylint: disable=no-member
 async def ping_puggers(ctx, message_to_other_players: discord.Option(str)):
     """Player command to ping all players currently inside the PUG queue.
@@ -364,7 +367,7 @@ class PugQueueCog(commands.Cog):
                     if channel.name != PUG_CHANNEL_NAME:
                         continue
                     if guild not in pug_guilds:
-                        pug_guilds[guild] = PugStatus(guild_channel=channel,
+                        pug_guilds[guild] = pugstatus.PugStatus(guild_channel=channel,
                                                       guild_roles=guild.roles)
                         await pug_guilds[guild].reload_puggers()
                     if pug_guilds[guild].is_full:
@@ -402,4 +405,6 @@ class PugQueueCog(commands.Cog):
                     break
 
 
-bot_init(bot, BOT_SECRET_TOKEN, (ErrorHandlerCog, PugQueueCog))
+for cog in (ErrorHandlerCog, PugQueueCog):
+    bot_instance.BOT.add_cog(cog(bot_instance.BOT))
+bot_instance.BOT.run(BOT_SECRET_TOKEN)

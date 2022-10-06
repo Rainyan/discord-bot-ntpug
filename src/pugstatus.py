@@ -8,6 +8,7 @@ import time
 import discord
 
 from config import cfg
+import bot_instance
 from database import Postgres, Sqlite3
 
 
@@ -98,7 +99,7 @@ class PugStatus():
         def is_cmd(msg, cmd):
             """Predicate for whether message equals a specific PUG command.
             """
-            return msg.content == f"{bot.command_prefix}{cmd}"
+            return msg.content == f"{bot_instance.BOT.command_prefix}{cmd}"
 
         def is_pug_reset(msg):
             """Predicate for whether a message signals PUG reset.
@@ -209,7 +210,7 @@ class PugStatus():
                 msg += f"{player.mention}, "
             msg = msg[:-2]  # trailing ", "
             msg += ("\n\nTeams unbalanced? Use **"
-                    f"{bot.command_prefix}scramble** to suggest new "
+                    f"{bot_instance.BOT.command_prefix}scramble** to suggest new "
                     "random teams.")
             return True, msg
 
@@ -255,7 +256,7 @@ class PugStatus():
 
             # BUG: should refactor the bot property hack to something that works
             # as we can't access the method change_presence like this
-            await bot.change_presence(activity=presence["activity"],
+            await bot_instance.BOT.change_presence(activity=presence["activity"],
                                       status=presence["status"])
             self.last_presence = presence
             self.last_changed_presence = int(time.time())
@@ -323,29 +324,3 @@ class PugStatus():
                            f"the {role.mention} server role._)")
                     await self.guild_channel.send(msg)
                     break
-
-
-class BotContainer():
-    """HACK: Kludge for getting this thing to work; should revisit"""
-    def __init__(self, the_bot, secret_token, cogs=None):
-        self.bot = the_bot
-        for cog in cogs:
-            self.bot.add_cog(cog(self.bot))
-        self.bot.run(secret_token)
-
-
-BOT = None
-
-
-def bot_init(the_bot, secret_token, cogs=None):
-    """Initialize and return the bot instance."""
-    global BOT
-    assert BOT is None
-    BOT = BotContainer(the_bot, secret_token, cogs)
-    return BOT
-
-
-@property
-def bot():
-    """Accessor for the bot instance."""
-    return BOT
