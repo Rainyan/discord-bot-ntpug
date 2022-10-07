@@ -1,62 +1,4 @@
-#!/usr/bin/env python3
-
-"""Discord bot for organizing PUGs (pick-up games).
-   Built for Neotokyo, but should work for any two-team game with even number
-   of players total.
-
-   Usage:
-     Slash commands:
-       - clearpuggers — Empty the PUG queue.
-                        Command access can be restricted by role(s) with the
-                        config value NTBOT_PUG_ADMIN_ROLES.
-
-       - ping         — Bot will simply respond with "Pong". Use to test if
-                        the bot is still online and responsive.
-
-       - ping_puggers — Ping all the players currently in the PUG queue.
-                        Can be used to manually organize games with smaller
-                        than expected number of players. Expects a message
-                        after the command, eg: "!ping_puggers Play 4v4?"
-
-       - pug          — Join the PUG queue if there is room.
-
-       - puggers      — List players currently in the PUG queue.
-
-       - scramble     — Suggest randomly scrambled teams for the last full PUG
-                        for balancing reasons. Can be repeated until a
-                        satisfactory scramble is reached.
-
-       - unpug        — Leave the PUG queue.
-
-     Config values:
-       The config values have been documented as comments in the config.yml
-       file itself.
-
-     For more information, please see the repository at:
-       https://github.com/Rainyan/discord-bot-ntpug
-"""
-
-# MIT License
-#
-# Copyright (c) 2021- https://github.com/Rainyan and collaborators
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
+"""The bot module (TODO: proper documentation here)"""
 
 import asyncio
 import random
@@ -71,12 +13,9 @@ import database
 import pugstatus
 import bot_instance
 from util import random_human_readable_phrase
-
+import pug
 
 assert discord.version_info.major == 2
-
-SCRIPT_NAME: Final[str] = "NT Pug Bot for Discord"
-SCRIPT_VERSION: Final[str] = "1.0.0"
 
 # Construct the Discord bot object
 INTENTS = discord.Intents.none()
@@ -139,7 +78,7 @@ assert len(PUGGER_ROLE) > 0
 FIRST_TEAM_NAME: Final[str] = cfg("NTBOT_FIRST_TEAM_NAME")
 SECOND_TEAM_NAME: Final[str] = cfg("NTBOT_SECOND_TEAM_NAME")
 
-print(f"Now running {SCRIPT_NAME} v.{SCRIPT_VERSION}", flush=True)
+print(f"Now running {pug.__title__} v.{pug.__version__}", flush=True)
 
 pug_guilds: Dict[discord.Guild, pugstatus.PugStatus] = {}
 
@@ -488,7 +427,3 @@ def main() -> None:
     # Blocking call that abstracts the bot's main event loop.
     assert bot_instance.BOT is not None
     bot_instance.BOT.run(BOT_SECRET_TOKEN)
-
-
-if __name__ == "__main__":
-    main()

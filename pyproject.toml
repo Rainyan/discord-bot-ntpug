@@ -42,6 +42,9 @@ black = "^22.10.0"
 line-length = 79
 target-version = ['py38', 'py39', 'py310']
 
+[tool.poetry.scripts]
+pugbot = "pug.bot:main"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"

@@ -33,7 +33,7 @@ jobs:
         pip install -r requirements.txt
         pip install pycodestyle pylint
     - name: Analysing the code with pylint
-      working-directory: ./src
+      working-directory: ./pug
       run: |
         pycodestyle `ls -R|grep .py$|xargs`
         pylint --ignored-modules=psycopg2 `ls -R|grep .py$|xargs`
