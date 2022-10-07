@@ -4,26 +4,29 @@
 from abc import ABC, abstractmethod
 import asyncio
 import sqlite3
+from types import TracebackType
+from typing import Any, Awaitable, Union, Optional, Type, TypeVar
 
 import psycopg2  # todo: make optional (setup.py)
 
 from config import cfg
 
 
+T = TypeVar("T", bound="DbDriver")
 class DbDriver(ABC):
     """Abstract DB driver base. All DB drivers should inherit from this."""
-    def __init__(self, *_args, **_kwargs):
+    def __init__(self, *_args: Any, **_kwargs: Any):
         self.lock = asyncio.Lock()
-        self.connection = None
-        self.guild_id = None
-        self.cursor = None
-        self.table = None
+        self.connection: Union[None, sqlite3.Connection, psycopg2.connection] = None
+        self.guild_id: Optional[int] = None
+        self.cursor: Union[None, sqlite3.Cursor, psycopg2.cursor] = None
+        self.table: Optional[str] = None
 
-    def __del__(self):
-        if hasattr(self, "connection"):
+    def __del__(self) -> None:
+        if self.connection is not None:
             self.connection.close()
 
-    def __call__(self, guild_id: int):
+    def __call__(self: T, guild_id: int) -> T:
         assert self.guild_id is None
         assert guild_id > 0
         self.guild_id = guild_id
@@ -32,13 +35,16 @@ class DbDriver(ABC):
         self.table = f"{cfg('NTBOT_DB_TABLE')}_{guild_id}"
 
         assert self.cursor is None
+        assert self.connection is not None
         self.cursor = self.connection.cursor()
 
         return self
 
-    async def __aenter__(self):
+    async def __aenter__(self: T) -> T:
         async with self.lock:
             assert self.guild_id is not None
+            assert self.connection is not None
+            assert self.cursor is not None
             # NOTE: Purges all DB data for debug.
             if cfg("NTBOT_DEBUG"):
                 self.cursor.execute(f"DROP TABLE IF EXISTS {self.table};")
@@ -50,7 +56,9 @@ class DbDriver(ABC):
             self.connection.commit()
         return self
 
-    async def __aexit__(self, exc_type, exc_value, traceback):
+    async def __aexit__(self, exc_type: Optional[Type[BaseException]],
+                        exc_value: Optional[BaseException],
+                        traceback: Optional[TracebackType]) -> bool:
         async with self.lock:
             assert self.table is not None
             self.table = None
@@ -59,7 +67,7 @@ class DbDriver(ABC):
             self.cursor = None
         return False
 
-    async def get_discord_user(self, discord_id=None) -> list[dict]:
+    async def get_discord_user(self, discord_id: Optional[int]=None) -> list[dict[str, Union[int, bool]]]:
         """Get the DB data of a specific user by their Discord ID integer.
 
            If discord_id is None, gets all users.
@@ -84,7 +92,7 @@ class DbDriver(ABC):
                             (discord_id, is_queued))
 
     @abstractmethod
-    async def _execute(self, query, my_vars=None) -> list:
+    async def _execute(self, query: str, my_vars: Optional[tuple[Any]]=None) -> list[dict[str, Union[int, bool]]]:
         """Returns a list of all fetched results of the query.
 
            If there were no results, returns an empty list.
@@ -145,7 +153,7 @@ class Postgres(DbDriver):
         return "%s"
 
 
-DB = None
+DB: Union[None, DbDriver] = None
 driver = cfg("NTBOT_DB_DRIVER")
 if driver == "postgres":
     DB = Postgres()

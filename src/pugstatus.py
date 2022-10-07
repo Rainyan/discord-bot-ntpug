@@ -4,6 +4,7 @@ import asyncio
 from datetime import datetime, timedelta, timezone
 import random
 import time
+from typing import Union
 
 import discord
 
@@ -37,7 +38,7 @@ class PugStatus():
         self.last_presence = None
         self.lock = asyncio.Lock()
 
-    async def reset(self):
+    async def reset(self) -> None:
         """Stores the previous puggers, and then resets current pugger queue.
         """
         async with self.lock:
@@ -45,7 +46,7 @@ class PugStatus():
             self.team1_players.clear()
             self.team2_players.clear()
 
-    async def player_join(self, player, team=None):
+    async def player_join(self, player, team=None) -> tuple[bool, str]:
         """If there is enough room in this PUG queue, assigns this player
            to a random team to wait in, until the PUG is ready to be started.
            The specific team rosters can later be shuffled by a !scramble.
@@ -69,7 +70,7 @@ class PugStatus():
             return False, (f"{player.mention} Sorry, this PUG is currently "
                            "full!")
 
-    async def reload_puggers(self):
+    async def reload_puggers(self) -> None:
         """Iterate PUG channel's recent message history to figure out who
            should be pugged. This is used both for restoring puggers after a
            bot restart, but also for dropping inactive players from the queue
@@ -81,18 +82,18 @@ class PugStatus():
         assert limit_hrs > 0
         after = datetime.now() - timedelta(hours=limit_hrs)
 
-        def is_cmd(msg, cmd):
+        def is_cmd(msg, cmd) -> bool:
             """Predicate for whether message equals a specific PUG command.
             """
             return msg.content == f"{bot_instance.BOT.command_prefix}{cmd}"
 
-        def is_pug_reset(msg):
+        def is_pug_reset(msg) -> bool:
             """Predicate for whether a message signals PUG reset.
             """
             return (msg.author.bot and
                     msg.content.endswith("has reset the PUG queue"))
 
-        def is_pug_start(msg):
+        def is_pug_start(msg) -> bool:
             """Predicate for whether a message signals PUG start.
             """
             return msg.author.bot and msg.content.startswith(PUG_READY_TITLE)
@@ -133,7 +134,7 @@ class PugStatus():
             self.prev_puggers = backup_prev.copy()
             raise err
 
-    async def player_leave(self, player):
+    async def player_leave(self, player) -> tuple[bool, str]:
         """Removes a player from the pugger queue if they were in it.
         """
         async with self.lock:
@@ -149,36 +150,36 @@ class PugStatus():
                            "PUG queue")
 
     @property
-    def num_queued(self):
+    def num_queued(self) -> int:
         """Returns the number of puggers currently in the PUG queue.
         """
         return len(self.team1_players) + len(self.team2_players)
 
     @property
-    def num_expected(self):
+    def num_expected(self) -> int:
         """Returns the number of puggers expected, total, to start a PUG.
         """
         return self.players_required_total
 
     @property
-    def players_per_team(self):
+    def players_per_team(self) -> int:
         """Players required to start a PUG, per team."""
         res = self.num_expected / 2
         assert res % 1 == 0, "Must be whole number"
         return int(res)
 
     @property
-    def num_more_needed(self):
+    def num_more_needed(self) -> int:
         """Returns how many more puggers are needed to start a PUG.
         """
         return max(0, self.num_expected - self.num_queued)
 
     @property
-    def is_full(self):
+    def is_full(self) -> bool:
         """Whether the PUG queue is currently full or not."""
         return self.num_queued >= self.num_expected
 
-    async def start_pug(self):
+    async def start_pug(self) -> tuple[bool, str]:
         """Starts a PUG match.
         """
         async with self.lock:
@@ -194,12 +195,13 @@ class PugStatus():
             for player in self.team2_players:
                 msg += f"{player.mention}, "
             msg = msg[:-2]  # trailing ", "
-            msg += ("\n\nTeams unbalanced? Use **"
-                    f"{bot_instance.BOT.command_prefix}scramble** to suggest "
-                    "new random teams.")
+            # FIXME!!!
+            # msg += ("\n\nTeams unbalanced? Use **"
+            #         f"{bot_instance.BOT.command_prefix}scramble** to suggest "
+            #         "new random teams.")
             return True, msg
 
-    async def update_presence(self):
+    async def update_presence(self) -> None:
         """Updates the bot's status message ("presence").
            This is used for displaying things like the PUG queue status.
         """
@@ -245,7 +247,7 @@ class PugStatus():
             self.last_presence = presence
             self.last_changed_presence = int(time.time())
 
-    async def role_ping_deltatime(self):
+    async def role_ping_deltatime(self) -> Union[timedelta, None]:
         """Returns a datetime.timedelta of latest role ping, or None if no such
            ping was found.
         """
@@ -271,7 +273,7 @@ class PugStatus():
             raise err
         return None
 
-    async def ping_role(self):
+    async def ping_role(self) -> None:
         """Pings the puggers Discord server role, if it's currently allowed.
            Frequency of these pings is restricted to avoid being too spammy.
         """

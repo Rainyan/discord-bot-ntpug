@@ -4,7 +4,7 @@ import os
 import random
 
 
-def random_human_readable_phrase():
+def random_human_readable_phrase() -> str:
     """Generates a random human readable phrase to work as an identifier.
        Can be used for the !scrambles, to make it easier for players to refer
        to specific scramble permutations via voice chat by using these phrases.

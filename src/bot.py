@@ -38,7 +38,7 @@
 
 # MIT License
 #
-# Copyright (c) 2021- https://github.com/Rainyan
+# Copyright (c) 2021- https://github.com/Rainyan and collaborators
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -74,7 +74,7 @@ from util import random_human_readable_phrase
 
 assert discord.version_info.major == 2
 
-SCRIPT_NAME = "NT Pug Bot"
+SCRIPT_NAME = "NT Pug Bot for Discord"
 SCRIPT_VERSION = "1.0.0"
 
 assert bot_instance.BOT is None
@@ -91,9 +91,20 @@ assert bot_instance.BOT is not None
 async def on_message(msg):
     """Used to notify users of the ongoing migration to Discord slash commands.
     """
-    if msg.author.bot:
+    command_prefix = "!"
+    # Testing if message starts with the command prefix explicitly,
+    # because it allows us to quickly ignore most chat messages,
+    # without having to execute the other code paths in this function at all.
+    if msg.author.bot or not msg.content.startswith(command_prefix):
         return
-    if not any([msg.content.startswith("!" + x) for x in
+    if msg.content == f"{command_prefix}ping":
+        await msg.channel.send(f"{msg.author.mention} pong")
+        return
+    if msg.content == f"{command_prefix}help":
+        await msg.channel.send(f"{msg.author.mention} If you need help for "
+                               "the PUG bot, please use `/pug help`, instead.")
+        return
+    if not any([msg.content.startswith(command_prefix + x) for x in
                ("pug", "unpug", "puggers", "clearpuggers", "ping_puggers")]):
         return
     # TODO: add the help page
@@ -115,7 +126,7 @@ SECOND_TEAM_NAME = cfg("NTBOT_SECOND_TEAM_NAME")
 
 print(f"Now running {SCRIPT_NAME} v.{SCRIPT_VERSION}", flush=True)
 
-pug_guilds = {}
+pug_guilds: dict[discord.Guild, pugstatus.PugStatus] = {}
 
 
 @bot_instance.BOT.slash_command(brief="Test if bot is active")
@@ -238,7 +249,7 @@ async def puggers(ctx):
         for player in all_players_queued:
             msg += f"{player.name}, "
         msg = msg[:-2]  # trailing ", "
-    # Respond ephemerally" if we aren't in a PUG channel context.
+    # Respond ephemerally if we aren't in a PUG channel context.
     in_pug_channel = await is_pug_channel(ctx, respond=False)
     await ctx.send_response(content=msg,
                             ephemeral=((not in_pug_channel) or
@@ -262,7 +273,8 @@ async def is_pug_channel(ctx, respond=True):
 @bot_instance.BOT.slash_command(brief="Ping all players currently queueing "
                                       "for PUG")
 # pylint: disable=no-member
-async def ping_puggers(ctx, message_to_other_players: discord.Option(str)):
+async def ping_puggers(ctx: discord.ext.commands.Context,
+                       message_to_other_players: str):
     """Player command to ping all players currently inside the PUG queue.
     """
     if not await is_pug_channel(ctx):
@@ -321,8 +333,7 @@ async def ping_puggers(ctx, message_to_other_players: discord.Option(str)):
 
 
 class ErrorHandlerCog(commands.Cog):
-    """Helper class for error handling.
-    """
+    """Helper class for error handling."""
     def __init__(self, parent_bot):
         self.bot = parent_bot
 
@@ -417,9 +428,9 @@ for cog in (ErrorHandlerCog, PugQueueCog):
     bot_instance.BOT.add_cog(cog(bot_instance.BOT))
 
 if cfg("NTBOT_DEBUG"):
-    print(f"Intents: {bot_instance.BOT.intents}")
-    for k,v in iter(bot_instance.BOT.intents):
-        if v:
-            print(k)
+    print(f"Intents ({bot_instance.BOT.intents}):")
+    for intent, enabled in iter(bot_instance.BOT.intents):
+        if enabled:
+            print(f"* {intent}")
 
 bot_instance.BOT.run(BOT_SECRET_TOKEN)

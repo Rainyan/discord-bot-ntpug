@@ -6,20 +6,24 @@
 """
 
 from ast import literal_eval
-import os
 import inspect
+import os
+from typing import Any, Callable, Union
 
 from strictyaml import (as_document, load, Bool, EmptyList, Float, Int, Map,
                         Seq, Str)
+from strictyaml.yamllocation import YAMLChunk
+
+
 
 
 class PredicatedInt(Int):
     """StrictYAML Int validator, with optional predicates."""
-    def __init__(self, predicates=None):
+    def __init__(self, predicates: Union[None, list[Callable[[int], bool]]]=None):
         self.predicates = predicates if predicates is not None else []
 
-    def validate_scalar(self, chunk):
-        val = super().validate_scalar(chunk)
+    def validate_scalar(self, chunk: YAMLChunk) -> int:
+        val = int(super().validate_scalar(chunk))
         for pred in self.predicates:
             if not pred(val):
                 chunk.expecting_but_found(str(inspect.getsourcelines(pred)[0]))
@@ -61,13 +65,14 @@ with open(file=CFG_PATH, mode="r", encoding="utf-8") as f_config:
 assert CFG is not None
 
 
-def cfg(key):
+def cfg(key: str) -> Any:
     """Returns a bot config value from environment variable or config file,
        in that order. If using an env var, its format has to match the type
        determined by the config values' StrictYAML schema.
     """
     assert isinstance(key, str)
-    if os.environ.get(key):
+    value: Union[None, str] = os.environ.get(key)
+    if value is not None:
         expected_ret_type = YAML_CFG_SCHEMA[key]
         # Small placeholder schema used for validating just this type.
         # We don't want to use the main schema because then we'd need
@@ -76,6 +81,6 @@ def cfg(key):
         mini_schema = {key: expected_ret_type}
         # Generate StrictYAML in-place, with the mini-schema to enforce
         # strict typing, and then return the queried key's value.
-        return as_document({key: literal_eval(os.environ.get(key))},
+        return as_document({key: literal_eval(value)},
                            Map(mini_schema))[key].value
     return CFG[key].value
