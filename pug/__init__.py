@@ -41,8 +41,13 @@ Usage:
 __title__ = "NT Pug Bot for Discord"
 __author__ = "https://github.com/Rainyan and collaborators"
 __license__ = "MIT"
-__copyright__ = "Copyright (c) 2021- https://github.com/Rainyan and collaborators"
+__copyright__ = ("Copyright (c) 2021- https://github.com/Rainyan and "
+                 "collaborators")
 __version__ = "1.0.0"
 
 
-import os, sys; sys.path.append(os.path.dirname(os.path.realpath(__file__)))
+import os
+import sys
+
+
+sys.path.append(os.path.dirname(os.path.realpath(__file__)))
