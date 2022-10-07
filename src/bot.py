@@ -60,7 +60,7 @@
 
 import asyncio
 import random
-from typing import Dict
+from typing import Dict, Final
 
 import discord
 from discord.ext import commands, tasks
@@ -75,8 +75,8 @@ from util import random_human_readable_phrase
 
 assert discord.version_info.major == 2
 
-SCRIPT_NAME = "NT Pug Bot for Discord"
-SCRIPT_VERSION = "1.0.0"
+SCRIPT_NAME: Final[str] = "NT Pug Bot for Discord"
+SCRIPT_VERSION: Final[str] = "1.0.0"
 
 assert bot_instance.BOT is None
 INTENTS = discord.Intents.none()
@@ -91,7 +91,7 @@ assert bot_instance.BOT is not None
 async def on_message(msg):
     """Used to notify users of the ongoing migration to Discord slash commands
     """
-    command_prefix = "!"
+    command_prefix: Final[str] = "!"
     # Testing if message starts with the command prefix explicitly,
     # because it allows us to quickly ignore most chat messages,
     # without having to execute the other code paths in this function at all.
@@ -129,14 +129,14 @@ async def on_message(msg):
     )
 
 
-PUG_CHANNEL_NAME = cfg("NTBOT_PUG_CHANNEL")
-BOT_SECRET_TOKEN = cfg("NTBOT_SECRET_TOKEN")
+PUG_CHANNEL_NAME: Final[str] = cfg("NTBOT_PUG_CHANNEL")
+BOT_SECRET_TOKEN: Final[str] = cfg("NTBOT_SECRET_TOKEN")
 assert 0 <= cfg("NTBOT_PUGGER_ROLE_PING_THRESHOLD") <= 1
-PUGGER_ROLE = cfg("NTBOT_PUGGER_ROLE")
+PUGGER_ROLE: Final[str] = cfg("NTBOT_PUGGER_ROLE")
 assert len(PUGGER_ROLE) > 0
 
-FIRST_TEAM_NAME = cfg("NTBOT_FIRST_TEAM_NAME")
-SECOND_TEAM_NAME = cfg("NTBOT_SECOND_TEAM_NAME")
+FIRST_TEAM_NAME: Final[str] = cfg("NTBOT_FIRST_TEAM_NAME")
+SECOND_TEAM_NAME: Final[str] = cfg("NTBOT_SECOND_TEAM_NAME")
 
 print(f"Now running {SCRIPT_NAME} v.{SCRIPT_VERSION}", flush=True)
 

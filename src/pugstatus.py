@@ -4,7 +4,7 @@ import asyncio
 from datetime import datetime, timedelta, timezone
 import random
 import time
-from typing import Tuple, Union
+from typing import Final, Tuple, Union
 
 import discord
 
@@ -14,7 +14,7 @@ import bot_instance
 
 # This is a variable because the text is used for detecting previous PUGs
 # when restoring status during restart.
-PUG_READY_TITLE = "**PUG is now ready!**"
+PUG_READY_TITLE: Final[str] = "**PUG is now ready!**"
 
 
 class PugStatus:

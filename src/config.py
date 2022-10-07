@@ -8,7 +8,7 @@
 from ast import literal_eval
 import inspect
 import os
-from typing import Any, Callable, Union
+from typing import Any, Callable, Dict, Final, Union
 
 from strictyaml import (
     as_document,
@@ -41,7 +41,7 @@ class PredicatedInt(Int):
 
 
 # The schema used for StrictYAML parsing.
-YAML_CFG_SCHEMA = {
+YAML_CFG_SCHEMA: Final[Dict[str, Any]] = {
     "NTBOT_SECRET_TOKEN": Str(),
     "NTBOT_PUG_CHANNEL": Str(),
     "NTBOT_PLAYERS_REQUIRED_TOTAL": PredicatedInt(
@@ -67,12 +67,12 @@ YAML_CFG_SCHEMA = {
     "NTBOT_DB_HOST": Str(),
     "NTBOT_DB_PORT": PredicatedInt([lambda x: x > 0]),
 }
-CFG_PATH = os.path.join(
+CFG_PATH: Final[str] = os.path.join(
     os.path.dirname(os.path.realpath(__file__)), "..", "cfg", "config.yml"
 )
 assert os.path.isfile(CFG_PATH)
 with open(file=CFG_PATH, mode="r", encoding="utf-8") as f_config:
-    CFG = load(f_config.read(), Map(YAML_CFG_SCHEMA))
+    CFG: Final[Any] = load(f_config.read(), Map(YAML_CFG_SCHEMA))
 assert CFG is not None
 
 
