@@ -70,7 +70,7 @@ YAML_CFG_SCHEMA: Final[Dict[str, Any]] = {
 CFG_PATH: Final[str] = os.path.join(
     os.path.dirname(os.path.realpath(__file__)), "..", "cfg", "config.yml"
 )
-assert os.path.isfile(CFG_PATH)
+assert os.path.isfile(CFG_PATH), f'Not a file: "{CFG_PATH}"'
 with open(file=CFG_PATH, mode="r", encoding="utf-8") as f_config:
     CFG: Final[Any] = load(f_config.read(), Map(YAML_CFG_SCHEMA))
 assert CFG is not None

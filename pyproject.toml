@@ -5,11 +5,13 @@ description = ""
 authors = ["Rain <Rainyan@users.noreply.github.com>"]
 readme = "README.md"
 include = [
-    "cfg",
+    "cfg/config.yml",
     "LICENSE",
     "README.md",
     "runtime.txt",
-    "static",
+    "static/phrase_gen/adjectives.txt",
+    "static/phrase_gen/nouns.txt",
+    "static/phrase_gen/README.txt",
 ]
 
 [tool.poetry.dependencies]
