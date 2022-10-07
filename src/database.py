@@ -17,29 +17,37 @@ class DbDriver(ABC):
         self.connection = None
         self.cursor = None
         self.table = None
+        self.guild_id = None
 
     def __del__(self):
         if hasattr(self, "connection"):
             self.connection.close()
 
     async def __aenter__(self):
+        async with self.lock:
+            assert self.guild_id is not None
+            # NOTE: Purges all DB data for debug.
+            if cfg("NTBOT_DEBUG"):
+                self.cursor.execute(f"DROP TABLE IF EXISTS {self.table};")
+            self.cursor.execute(f"""CREATE TABLE IF NOT EXISTS {self.table} (
+                                id serial PRIMARY KEY,
+                                user_id numeric,
+                                is_queued boolean DEFAULT false,
+                                unique(user_id));""")
+            self.connection.commit()
         return self
 
     def __call__(self, guild_id: int):
+        assert self.guild_id is None
         assert guild_id > 0
+        self.guild_id = guild_id
+
         assert self.table is None
         self.table = f"{cfg('NTBOT_DB_TABLE')}_{guild_id}"
+
         assert self.cursor is None
         self.cursor = self.connection.cursor()
-        # NOTE: Purges all DB data for debug.
-        if cfg("NTBOT_DEBUG"):
-            self.cursor.execute(f"DROP TABLE IF EXISTS {self.table};")
-        self.cursor.execute(f"""CREATE TABLE IF NOT EXISTS {self.table} (
-                            id serial PRIMARY KEY,
-                            user_id numeric,
-                            is_queued boolean DEFAULT false,
-                            unique(user_id));""")
-        self.connection.commit()
+
         return self
 
     async def __aexit__(self, exc_type, exc_value, traceback):
@@ -51,7 +59,6 @@ class DbDriver(ABC):
             self.cursor = None
         return False
 
-    # todo: refactor to be by guild_id
     async def get_discord_user(self, discord_id=None):
         """Get the DB data of a specific user by their Discord ID integer.
 
@@ -66,7 +73,6 @@ class DbDriver(ABC):
         res = await self._execute(query, my_vars)
         return [dict(zip(("db_row_id", "discord_id", "queued"), x)) for x in res]
 
-    # todo: refactor to be by guild_id
     async def set_discord_user(self, discord_id: int, is_queued: bool):
         """Set the DB queued state of a specific user by their Discord ID.
         """

@@ -134,8 +134,8 @@ async def pug(ctx):
     """Player command for joining the PUG queue."""
 
     print("Trying new db method:")
-    async with database.DB(ctx.guild.id) as db:
-        res = await db.get_discord_user(ctx.user.id)
+    async with database.DB(ctx.guild.id) as driver:
+        res = await driver.get_discord_user(ctx.user.id)
         print(res)
     print("End of test")
 
