@@ -72,7 +72,9 @@ class PugStatus:
             if len(self.team2_players) < self.players_per_team:
                 self.team2_players.append(player)
                 return True, ""
-            return False, (f"{player.mention} Sorry, this PUG is currently " "full!")
+            return False, (
+                f"{player.mention} Sorry, this PUG is currently " "full!"
+            )
 
     async def reload_puggers(self) -> None:
         """Iterate PUG channel's recent message history to figure out who
@@ -92,7 +94,9 @@ class PugStatus:
 
         def is_pug_reset(msg) -> bool:
             """Predicate for whether a message signals PUG reset."""
-            return msg.author.bot and msg.content.endswith("has reset the PUG queue")
+            return msg.author.bot and msg.content.endswith(
+                "has reset the PUG queue"
+            )
 
         def is_pug_start(msg) -> bool:
             """Predicate for whether a message signals PUG start."""

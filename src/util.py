@@ -10,14 +10,19 @@ def random_human_readable_phrase() -> str:
     to specific scramble permutations via voice chat by using these phrases.
     """
     base_path = os.path.join(
-        os.path.dirname(os.path.realpath(__file__)), "..", "static", "phrase_gen"
+        os.path.dirname(os.path.realpath(__file__)),
+        "..",
+        "static",
+        "phrase_gen",
     )
     with open(
         file=os.path.join(base_path, "nouns.txt"), mode="r", encoding="utf-8"
     ) as f_nouns:
         nouns = f_nouns.readlines()
     with open(
-        file=os.path.join(base_path, "adjectives.txt"), mode="r", encoding="utf-8"
+        file=os.path.join(base_path, "adjectives.txt"),
+        mode="r",
+        encoding="utf-8",
     ) as f_adjs:
         adjectives = f_adjs.readlines()
     phrase = (

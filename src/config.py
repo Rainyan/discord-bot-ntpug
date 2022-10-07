@@ -10,14 +10,26 @@ import inspect
 import os
 from typing import Any, Callable, Union
 
-from strictyaml import as_document, load, Bool, EmptyList, Float, Int, Map, Seq, Str
+from strictyaml import (
+    as_document,
+    load,
+    Bool,
+    EmptyList,
+    Float,
+    Int,
+    Map,
+    Seq,
+    Str,
+)
 from strictyaml.yamllocation import YAMLChunk
 
 
 class PredicatedInt(Int):
     """StrictYAML Int validator, with optional predicates."""
 
-    def __init__(self, predicates: Union[None, list[Callable[[int], bool]]] = None):
+    def __init__(
+        self, predicates: Union[None, list[Callable[[int], bool]]] = None
+    ):
         self.predicates = predicates if predicates is not None else []
 
     def validate_scalar(self, chunk: YAMLChunk) -> int:
@@ -80,5 +92,7 @@ def cfg(key: str) -> Any:
         mini_schema = {key: expected_ret_type}
         # Generate StrictYAML in-place, with the mini-schema to enforce
         # strict typing, and then return the queried key's value.
-        return as_document({key: literal_eval(value)}, Map(mini_schema))[key].value
+        return as_document({key: literal_eval(value)}, Map(mini_schema))[
+            key
+        ].value
     return CFG[key].value

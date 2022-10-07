@@ -163,7 +163,9 @@ async def pug(ctx):
             f"({pug_guilds[ctx.guild].num_queued} / "
             f"{pug_guilds[ctx.guild].num_expected})"
         )
-    await ctx.send_response(content=response, ephemeral=cfg("NTBOT_EPHEMERAL_MESSAGES"))
+    await ctx.send_response(
+        content=response, ephemeral=cfg("NTBOT_EPHEMERAL_MESSAGES")
+    )
 
 
 @bot_instance.BOT.slash_command(brief="Leave the PUG queue")
@@ -179,7 +181,9 @@ async def unpug(ctx):
             f"({pug_guilds[ctx.guild].num_queued} / "
             f"{pug_guilds[ctx.guild].num_expected})"
         )
-    await ctx.send_response(content=msg, ephemeral=cfg("NTBOT_EPHEMERAL_MESSAGES"))
+    await ctx.send_response(
+        content=msg, ephemeral=cfg("NTBOT_EPHEMERAL_MESSAGES")
+    )
 
 
 @bot_instance.BOT.slash_command(brief="Empty the server's PUG queue")
@@ -244,7 +248,9 @@ async def scramble(ctx):
     await ctx.respond(msg)
 
 
-@bot_instance.BOT.slash_command(brief="List players currently queueing for " "PUG")
+@bot_instance.BOT.slash_command(
+    brief="List players currently queueing for " "PUG"
+)
 async def puggers(ctx):
     """Player command for listing players currently in the PUG queue."""
     msg = (
@@ -255,7 +261,8 @@ async def puggers(ctx):
 
     if pug_guilds[ctx.guild].num_queued > 0:
         all_players_queued = (
-            pug_guilds[ctx.guild].team1_players + pug_guilds[ctx.guild].team2_players
+            pug_guilds[ctx.guild].team1_players
+            + pug_guilds[ctx.guild].team2_players
         )
         msg += ": "
         for player in all_players_queued:
@@ -264,7 +271,8 @@ async def puggers(ctx):
     # Respond ephemerally if we aren't in a PUG channel context.
     in_pug_channel = await is_pug_channel(ctx, respond=False)
     await ctx.send_response(
-        content=msg, ephemeral=((not in_pug_channel) or cfg("NTBOT_EPHEMERAL_MESSAGES"))
+        content=msg,
+        ephemeral=((not in_pug_channel) or cfg("NTBOT_EPHEMERAL_MESSAGES")),
     )
 
 
@@ -283,9 +291,13 @@ async def is_pug_channel(ctx, respond=True):
 
 
 @commands.cooldown(
-    rate=1, per=cfg("NTBOT_PING_PUGGERS_COOLDOWN_SECS"), type=commands.BucketType.user
+    rate=1,
+    per=cfg("NTBOT_PING_PUGGERS_COOLDOWN_SECS"),
+    type=commands.BucketType.user,
 )
-@bot_instance.BOT.slash_command(brief="Ping all players currently queueing " "for PUG")
+@bot_instance.BOT.slash_command(
+    brief="Ping all players currently queueing " "for PUG"
+)
 # pylint: disable=no-member
 async def ping_puggers(
     ctx: discord.ext.commands.Context, message_to_other_players: str
@@ -303,7 +315,8 @@ async def ping_puggers(
     # Only admins and players in the queue themselves are allowed to ping queue
     if not is_admin:
         if ctx.user not in (
-            pug_guilds[ctx.guild].team1_players + pug_guilds[ctx.guild].team2_players
+            pug_guilds[ctx.guild].team1_players
+            + pug_guilds[ctx.guild].team2_players
         ):
             if pug_guilds[ctx.guild].num_queued == 0:
                 await ctx.respond(
@@ -332,9 +345,13 @@ async def ping_puggers(
 
     msg = ""
     async with pug_guilds[ctx.guild].lock:
-        for player in [p for p in pug_guilds[ctx.guild].team1_players if p != ctx.user]:
+        for player in [
+            p for p in pug_guilds[ctx.guild].team1_players if p != ctx.user
+        ]:
             msg += f"{player.mention}, "
-        for player in [p for p in pug_guilds[ctx.guild].team2_players if p != ctx.user]:
+        for player in [
+            p for p in pug_guilds[ctx.guild].team2_players if p != ctx.user
+        ]:
             msg += f"{player.mention}, "
         msg = msg[:-2]  # trailing ", "
     message_to_other_players = message_to_other_players.replace("`", "")
@@ -413,7 +430,9 @@ class PugQueueCog(commands.Cog):
                         )
                         await pug_guilds[guild].reload_puggers()
                     if pug_guilds[guild].is_full:
-                        pug_start_success, msg = await pug_guilds[guild].start_pug()
+                        pug_start_success, msg = await pug_guilds[
+                            guild
+                        ].start_pug()
                         if pug_start_success:
                             # Before starting pug and resetting queue, manually
                             # update presence, so we're guaranteed to have the

@@ -20,7 +20,9 @@ class DbDriver(ABC):
 
     def __init__(self, *_args: Any, **_kwargs: Any):
         self.lock = asyncio.Lock()
-        self.connection: Union[None, sqlite3.Connection, psycopg2.connection] = None
+        self.connection: Union[
+            None, sqlite3.Connection, psycopg2.connection
+        ] = None
         self.guild_id: Optional[int] = None
         self.cursor: Union[None, sqlite3.Cursor, psycopg2.cursor] = None
         self.table: Optional[str] = None
@@ -89,7 +91,9 @@ class DbDriver(ABC):
             query += f" WHERE user_id = {self.bind_placeholder}"
             my_vars = (discord_id,)
         res = await self._execute(query, my_vars)
-        return [dict(zip(("db_row_id", "discord_id", "queued"), x)) for x in res]
+        return [
+            dict(zip(("db_row_id", "discord_id", "queued"), x)) for x in res
+        ]
 
     async def set_discord_user(self, discord_id: int, is_queued: bool) -> None:
         """Set the DB queued state of a specific user by their Discord ID."""
