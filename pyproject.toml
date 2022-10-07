@@ -1,8 +1,9 @@
 [tool.poetry]
 name = "pug"
 version = "1.0.0"
-description = ""
+description = "PUG (pick-up game) bot for Discord."
 authors = ["Rain <Rainyan@users.noreply.github.com>"]
+license = "MIT License"
 readme = "README.md"
 include = [
     "cfg/config.yml",
