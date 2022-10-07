@@ -88,7 +88,8 @@ assert bot_instance.BOT is not None
 
 @bot_instance.BOT.event
 async def on_message(msg):
-    """Used to notify users of the ongoing migration to Discord slash commands."""
+    """Used to notify users of the ongoing migration to Discord slash commands
+    """
     command_prefix = "!"
     # Testing if message starts with the command prefix explicitly,
     # because it allows us to quickly ignore most chat messages,
@@ -105,10 +106,16 @@ async def on_message(msg):
         )
         return
     if not any(
-        [
+        (
             msg.content.startswith(command_prefix + x)
-            for x in ("pug", "unpug", "puggers", "clearpuggers", "ping_puggers")
-        ]
+            for x in (
+                "pug",
+                "unpug",
+                "puggers",
+                "clearpuggers",
+                "ping_puggers",
+            )
+        )
     ):
         return
     # TODO: add the help page

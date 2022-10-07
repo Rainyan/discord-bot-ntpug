@@ -43,7 +43,8 @@ class PugStatus:
         self.lock = asyncio.Lock()
 
     async def reset(self) -> None:
-        """Stores the previous puggers, and then resets current pugger queue."""
+        """Stores the previous puggers, and then resets current pugger queue.
+        """
         async with self.lock:
             self.prev_puggers = self.team1_players + self.team2_players
             self.team1_players.clear()
@@ -202,8 +203,8 @@ class PugStatus:
             msg = msg[:-2]  # trailing ", "
             # FIXME!!!
             # msg += ("\n\nTeams unbalanced? Use **"
-            #         f"{bot_instance.BOT.command_prefix}scramble** to suggest "
-            #         "new random teams.")
+            #         f"{bot_instance.BOT.command_prefix}scramble** to "
+            #         "suggest new random teams.")
             return True, msg
 
     async def update_presence(self) -> None:
