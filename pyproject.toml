@@ -7,7 +7,9 @@ license = "MIT License"
 readme = "README.md"
 include = [
     "cfg/config.yml",
+    "Dockerfile",
     "LICENSE",
+    "Procfile",
     "README.md",
     "runtime.txt",
     "static/phrase_gen/adjectives.txt",
