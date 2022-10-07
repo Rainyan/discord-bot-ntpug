@@ -93,9 +93,8 @@ async def on_message(msg):
     """
     if msg.author.bot:
         return
-    cmds = ["!"+x for x in
-            ("pug", "unpug", "puggers", "clearpuggers", "ping_puggers")]
-    if msg.content not in cmds:
+    if not any([msg.content.startswith("!" + x) for x in
+               ("pug", "unpug", "puggers", "clearpuggers", "ping_puggers")]):
         return
     # TODO: add the help page
     # TODO: refactor into a command group, "/pug join", "/pug leave" etc.
