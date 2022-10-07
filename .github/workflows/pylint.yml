@@ -33,7 +33,7 @@ jobs:
         pip install pylint
         pip install pycodestyle
     - name: Analysing the code with pylint
+      working-directory: ./src
       run: |
-        cd ./src
         pylint `ls -R|grep .py$|xargs`
         pycodestyle `ls -R|grep .py$|xargs`
