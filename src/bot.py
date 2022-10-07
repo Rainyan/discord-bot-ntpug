@@ -77,18 +77,13 @@ assert discord.version_info.major == 2
 SCRIPT_NAME = "NT Pug Bot"
 SCRIPT_VERSION = "1.0.0"
 
-
-# TODO: confirm what we actually need; remove unnecessary
-# INTENTS = discord.Intents.none()
-# INTENTS.messages = True  # for legacy !commands
-# INTENTS.message_content = True  # for legacy !commands
-# INTENTS.presences = True  # for the queue status announces, etc.
-
 assert bot_instance.BOT is None
-bot_instance.BOT = commands.Bot(case_insensitive=True)
-# TODO: actually use the selected intents here
-# bot_instance.BOT = commands.Bot(case_insensitive=True,
-#                                 intents=INTENTS)
+INTENTS = discord.Intents.none()
+INTENTS.guilds = True
+INTENTS.guild_messages = True  # for legacy !commands
+INTENTS.message_content = True  # for legacy !commands
+bot_instance.BOT = commands.Bot(case_insensitive=True,
+                                intents=INTENTS)
 assert bot_instance.BOT is not None
 
 
@@ -421,4 +416,11 @@ class PugQueueCog(commands.Cog):
 
 for cog in (ErrorHandlerCog, PugQueueCog):
     bot_instance.BOT.add_cog(cog(bot_instance.BOT))
+
+if cfg("NTBOT_DEBUG"):
+    print(f"Intents: {bot_instance.BOT.intents}")
+    for k,v in iter(bot_instance.BOT.intents):
+        if v:
+            print(k)
+
 bot_instance.BOT.run(BOT_SECRET_TOKEN)
