@@ -36,4 +36,4 @@ jobs:
       working-directory: ./src
       run: |
         pycodestyle `ls -R|grep .py$|xargs`
-        pylint `ls -R|grep .py$|xargs`
+        pylint --ignored-modules=psycopg2 `ls -R|grep .py$|xargs`
