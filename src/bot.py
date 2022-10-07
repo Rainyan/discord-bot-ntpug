@@ -60,6 +60,7 @@
 
 import asyncio
 import random
+from typing import Dict
 
 import discord
 from discord.ext import commands, tasks
@@ -79,9 +80,9 @@ SCRIPT_VERSION = "1.0.0"
 
 assert bot_instance.BOT is None
 INTENTS = discord.Intents.none()
-INTENTS.guilds = True
-INTENTS.guild_messages = True  # for legacy !commands
-INTENTS.message_content = True  # for legacy !commands
+INTENTS.guilds = True  # pylint: disable=assigning-non-slot
+INTENTS.guild_messages = True  # pylint: disable=assigning-non-slot
+INTENTS.message_content = True  # pylint: disable=assigning-non-slot
 bot_instance.BOT = commands.Bot(case_insensitive=True, intents=INTENTS)
 assert bot_instance.BOT is not None
 
@@ -139,7 +140,7 @@ SECOND_TEAM_NAME = cfg("NTBOT_SECOND_TEAM_NAME")
 
 print(f"Now running {SCRIPT_NAME} v.{SCRIPT_VERSION}", flush=True)
 
-pug_guilds: dict[discord.Guild, pugstatus.PugStatus] = {}
+pug_guilds: Dict[discord.Guild, pugstatus.PugStatus] = {}
 
 
 @bot_instance.BOT.slash_command(brief="Test if bot is active")

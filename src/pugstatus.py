@@ -4,7 +4,7 @@ import asyncio
 from datetime import datetime, timedelta, timezone
 import random
 import time
-from typing import Union
+from typing import Tuple, Union
 
 import discord
 
@@ -144,7 +144,7 @@ class PugStatus:
             self.prev_puggers = backup_prev.copy()
             raise err
 
-    async def player_leave(self, player) -> tuple[bool, str]:
+    async def player_leave(self, player) -> Tuple[bool, str]:
         """Removes a player from the pugger queue if they were in it."""
         async with self.lock:
             num_before = self.num_queued
@@ -186,7 +186,7 @@ class PugStatus:
         """Whether the PUG queue is currently full or not."""
         return self.num_queued >= self.num_expected
 
-    async def start_pug(self) -> tuple[bool, str]:
+    async def start_pug(self) -> Tuple[bool, str]:
         """Starts a PUG match."""
         async with self.lock:
             if len(self.team1_players) == 0 or len(self.team2_players) == 0:
