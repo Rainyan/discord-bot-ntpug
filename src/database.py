@@ -90,6 +90,7 @@ class DbDriver(ABC):
         """
         pass
 
+    @property
     @abstractmethod
     def bind_placeholder(self) -> str:
         """Returns the placeholder used for binding values in SQL queries."""
