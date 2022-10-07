@@ -10,16 +10,14 @@ import inspect
 import os
 from typing import Any, Callable, Union
 
-from strictyaml import (as_document, load, Bool, EmptyList, Float, Int, Map,
-                        Seq, Str)
+from strictyaml import as_document, load, Bool, EmptyList, Float, Int, Map, Seq, Str
 from strictyaml.yamllocation import YAMLChunk
-
-
 
 
 class PredicatedInt(Int):
     """StrictYAML Int validator, with optional predicates."""
-    def __init__(self, predicates: Union[None, list[Callable[[int], bool]]]=None):
+
+    def __init__(self, predicates: Union[None, list[Callable[[int], bool]]] = None):
         self.predicates = predicates if predicates is not None else []
 
     def validate_scalar(self, chunk: YAMLChunk) -> int:
@@ -34,8 +32,9 @@ class PredicatedInt(Int):
 YAML_CFG_SCHEMA = {
     "NTBOT_SECRET_TOKEN": Str(),
     "NTBOT_PUG_CHANNEL": Str(),
-    "NTBOT_PLAYERS_REQUIRED_TOTAL": PredicatedInt([lambda x: x > 0,
-                                                   lambda x: x % 2 == 0]),
+    "NTBOT_PLAYERS_REQUIRED_TOTAL": PredicatedInt(
+        [lambda x: x > 0, lambda x: x % 2 == 0]
+    ),
     "NTBOT_DEBUG": Bool(),
     "NTBOT_POLLING_INTERVAL_SECS": Int(),
     "NTBOT_PRESENCE_INTERVAL_SECS": Int(),
@@ -48,7 +47,6 @@ YAML_CFG_SCHEMA = {
     "NTBOT_FIRST_TEAM_NAME": Str(),
     "NTBOT_SECOND_TEAM_NAME": Str(),
     "NTBOT_EPHEMERAL_MESSAGES": Bool(),
-
     "NTBOT_DB_DRIVER": Str(),
     "NTBOT_DB_NAME": Str(),
     "NTBOT_DB_USER": Str(),
@@ -57,8 +55,9 @@ YAML_CFG_SCHEMA = {
     "NTBOT_DB_HOST": Str(),
     "NTBOT_DB_PORT": PredicatedInt([lambda x: x > 0]),
 }
-CFG_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                        "..", "cfg", "config.yml")
+CFG_PATH = os.path.join(
+    os.path.dirname(os.path.realpath(__file__)), "..", "cfg", "config.yml"
+)
 assert os.path.isfile(CFG_PATH)
 with open(file=CFG_PATH, mode="r", encoding="utf-8") as f_config:
     CFG = load(f_config.read(), Map(YAML_CFG_SCHEMA))
@@ -67,8 +66,8 @@ assert CFG is not None
 
 def cfg(key: str) -> Any:
     """Returns a bot config value from environment variable or config file,
-       in that order. If using an env var, its format has to match the type
-       determined by the config values' StrictYAML schema.
+    in that order. If using an env var, its format has to match the type
+    determined by the config values' StrictYAML schema.
     """
     assert isinstance(key, str)
     value: Union[None, str] = os.environ.get(key)
@@ -81,6 +80,5 @@ def cfg(key: str) -> Any:
         mini_schema = {key: expected_ret_type}
         # Generate StrictYAML in-place, with the mini-schema to enforce
         # strict typing, and then return the queried key's value.
-        return as_document({key: literal_eval(value)},
-                           Map(mini_schema))[key].value
+        return as_document({key: literal_eval(value)}, Map(mini_schema))[key].value
     return CFG[key].value

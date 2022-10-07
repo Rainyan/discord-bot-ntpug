@@ -17,15 +17,19 @@ import bot_instance
 PUG_READY_TITLE = "**PUG is now ready!**"
 
 
-class PugStatus():
+class PugStatus:
     """Object for containing and operating on one Discord server's PUG
-       information.
+    information.
     """
+
     # pylint: disable=too-many-instance-attributes
     # This might need revisiting, but deal with it for now.
-    def __init__(self, guild_channel,
-                 players_required=cfg("NTBOT_PLAYERS_REQUIRED_TOTAL"),
-                 guild_roles=None):
+    def __init__(
+        self,
+        guild_channel,
+        players_required=cfg("NTBOT_PLAYERS_REQUIRED_TOTAL"),
+        guild_roles=None,
+    ):
         self.guild_roles = [] if guild_roles is None else guild_roles
         self.guild_channel = guild_channel
         self.team1_players = []
@@ -39,8 +43,7 @@ class PugStatus():
         self.lock = asyncio.Lock()
 
     async def reset(self) -> None:
-        """Stores the previous puggers, and then resets current pugger queue.
-        """
+        """Stores the previous puggers, and then resets current pugger queue."""
         async with self.lock:
             self.prev_puggers = self.team1_players + self.team2_players
             self.team1_players.clear()
@@ -48,16 +51,18 @@ class PugStatus():
 
     async def player_join(self, player, team=None) -> tuple[bool, str]:
         """If there is enough room in this PUG queue, assigns this player
-           to a random team to wait in, until the PUG is ready to be started.
-           The specific team rosters can later be shuffled by a !scramble.
+        to a random team to wait in, until the PUG is ready to be started.
+        The specific team rosters can later be shuffled by a !scramble.
         """
         async with self.lock:
-            if not cfg("NTBOT_DEBUG") and \
-                    (player in self.team1_players or
-                     player in self.team2_players):
-                return False, (f"{player.mention} You are already queued! "
-                               "If you wanted to un-PUG, please use `unpug` "
-                               "instead.")
+            if not cfg("NTBOT_DEBUG") and (
+                player in self.team1_players or player in self.team2_players
+            ):
+                return False, (
+                    f"{player.mention} You are already queued! "
+                    "If you wanted to un-PUG, please use `unpug` "
+                    "instead."
+                )
             if team is None:
                 team = random.randint(0, 1)  # flip a coin between team1/team2
             if team == 0:
@@ -67,14 +72,13 @@ class PugStatus():
             if len(self.team2_players) < self.players_per_team:
                 self.team2_players.append(player)
                 return True, ""
-            return False, (f"{player.mention} Sorry, this PUG is currently "
-                           "full!")
+            return False, (f"{player.mention} Sorry, this PUG is currently " "full!")
 
     async def reload_puggers(self) -> None:
         """Iterate PUG channel's recent message history to figure out who
-           should be pugged. This is used both for restoring puggers after a
-           bot restart, but also for dropping inactive players from the queue
-           after inactivity of "NTBOT_IDLE_THRESHOLD_HOURS" period.
+        should be pugged. This is used both for restoring puggers after a
+        bot restart, but also for dropping inactive players from the queue
+        after inactivity of "NTBOT_IDLE_THRESHOLD_HOURS" period.
         """
         return  # FIXME: update to use database logic!!!
 
@@ -83,19 +87,15 @@ class PugStatus():
         after = datetime.now() - timedelta(hours=limit_hrs)
 
         def is_cmd(msg, cmd) -> bool:
-            """Predicate for whether message equals a specific PUG command.
-            """
+            """Predicate for whether message equals a specific PUG command."""
             return msg.content == f"{bot_instance.BOT.command_prefix}{cmd}"
 
         def is_pug_reset(msg) -> bool:
-            """Predicate for whether a message signals PUG reset.
-            """
-            return (msg.author.bot and
-                    msg.content.endswith("has reset the PUG queue"))
+            """Predicate for whether a message signals PUG reset."""
+            return msg.author.bot and msg.content.endswith("has reset the PUG queue")
 
         def is_pug_start(msg) -> bool:
-            """Predicate for whether a message signals PUG start.
-            """
+            """Predicate for whether a message signals PUG start."""
             return msg.author.bot and msg.content.startswith(PUG_READY_TITLE)
 
         backup_team2 = self.team2_players.copy()
@@ -112,13 +112,18 @@ class PugStatus():
             # because this code only runs on bot init, and then once per
             # clear_inactive_puggers() task loop period, which is at most once
             # per hour.
-            async for msg in self.guild_channel.history(limit=None,
-                                                        after=after,
-                                                        oldest_first=True).\
-                    filter(lambda msg: any((is_cmd(msg, "pug"),
-                                            is_cmd(msg, "unpug"),
-                                            is_pug_reset(msg),
-                                            is_pug_start(msg)))):
+            async for msg in self.guild_channel.history(
+                limit=None, after=after, oldest_first=True
+            ).filter(
+                lambda msg: any(
+                    (
+                        is_cmd(msg, "pug"),
+                        is_cmd(msg, "unpug"),
+                        is_pug_reset(msg),
+                        is_pug_start(msg),
+                    )
+                )
+            ):
                 if is_pug_reset(msg) or is_pug_start(msg):
                     await self.reset()
                 elif is_cmd(msg, "pug"):
@@ -135,30 +140,28 @@ class PugStatus():
             raise err
 
     async def player_leave(self, player) -> tuple[bool, str]:
-        """Removes a player from the pugger queue if they were in it.
-        """
+        """Removes a player from the pugger queue if they were in it."""
         async with self.lock:
             num_before = self.num_queued
             self.team1_players = [p for p in self.team1_players if p != player]
             self.team2_players = [p for p in self.team2_players if p != player]
             num_after = self.num_queued
 
-            left_queue = (num_after != num_before)
+            left_queue = num_after != num_before
             if left_queue:
                 return True, ""
-            return False, (f"{player.mention} You are not currently in the "
-                           "PUG queue")
+            return False, (
+                f"{player.mention} You are not currently in the " "PUG queue"
+            )
 
     @property
     def num_queued(self) -> int:
-        """Returns the number of puggers currently in the PUG queue.
-        """
+        """Returns the number of puggers currently in the PUG queue."""
         return len(self.team1_players) + len(self.team2_players)
 
     @property
     def num_expected(self) -> int:
-        """Returns the number of puggers expected, total, to start a PUG.
-        """
+        """Returns the number of puggers expected, total, to start a PUG."""
         return self.players_required_total
 
     @property
@@ -170,8 +173,7 @@ class PugStatus():
 
     @property
     def num_more_needed(self) -> int:
-        """Returns how many more puggers are needed to start a PUG.
-        """
+        """Returns how many more puggers are needed to start a PUG."""
         return max(0, self.num_expected - self.num_queued)
 
     @property
@@ -180,8 +182,7 @@ class PugStatus():
         return self.num_queued >= self.num_expected
 
     async def start_pug(self) -> tuple[bool, str]:
-        """Starts a PUG match.
-        """
+        """Starts a PUG match."""
         async with self.lock:
             if len(self.team1_players) == 0 or len(self.team2_players) == 0:
                 await self.reset()
@@ -203,7 +204,7 @@ class PugStatus():
 
     async def update_presence(self) -> None:
         """Updates the bot's status message ("presence").
-           This is used for displaying things like the PUG queue status.
+        This is used for displaying things like the PUG queue status.
         """
         async with self.lock:
             delta_time = int(time.time()) - self.last_changed_presence
@@ -215,7 +216,7 @@ class PugStatus():
             if presence is None:
                 presence = {
                     "activity": discord.BaseActivity(),
-                    "status": discord.Status.idle
+                    "status": discord.Status.idle,
                 }
 
             puggers_needed = self.num_more_needed
@@ -231,34 +232,38 @@ class PugStatus():
                     text += "s"  # plural
                 else:
                     text += "!"  # need one more!
-                activity = discord.Activity(type=discord.ActivityType.watching,
-                                            name=text)
+                activity = discord.Activity(
+                    type=discord.ActivityType.watching, name=text
+                )
             else:
                 text = "a PUG! 🐩"
-                activity = discord.Activity(type=discord.ActivityType.playing,
-                                            name=text)
+                activity = discord.Activity(
+                    type=discord.ActivityType.playing, name=text
+                )
 
             presence["activity"] = activity
             presence["status"] = status
 
             await bot_instance.BOT.change_presence(
-                activity=presence["activity"],
-                status=presence["status"])
+                activity=presence["activity"], status=presence["status"]
+            )
             self.last_presence = presence
             self.last_changed_presence = int(time.time())
 
     async def role_ping_deltatime(self) -> Union[timedelta, None]:
         """Returns a datetime.timedelta of latest role ping, or None if no such
-           ping was found.
+        ping was found.
         """
         after = datetime.now() - timedelta(
-            hours=cfg("NTBOT_PUGGER_ROLE_PING_MIN_INTERVAL_HOURS"))
+            hours=cfg("NTBOT_PUGGER_ROLE_PING_MIN_INTERVAL_HOURS")
+        )
         try:
-            async for msg in self.guild_channel.history(limit=None,
-                                                        after=after,
-                                                        oldest_first=False).\
-                    filter(lambda msg: cfg("NTBOT_PUGGER_ROLE")
-                           in [role.name for role in msg.role_mentions]):
+            async for msg in self.guild_channel.history(
+                limit=None, after=after, oldest_first=False
+            ).filter(
+                lambda msg: cfg("NTBOT_PUGGER_ROLE")
+                in [role.name for role in msg.role_mentions]
+            ):
                 return datetime.now(timezone.utc) - msg.created_at
         except discord.errors.HTTPException as err:
             # If it's not a library error, and we got a HTTP 5xx response,
@@ -275,7 +280,7 @@ class PugStatus():
 
     async def ping_role(self) -> None:
         """Pings the puggers Discord server role, if it's currently allowed.
-           Frequency of these pings is restricted to avoid being too spammy.
+        Frequency of these pings is restricted to avoid being too spammy.
         """
         async with self.lock:
             if self.num_more_needed == 0:
@@ -297,16 +302,18 @@ class PugStatus():
                 if role.name == cfg("NTBOT_PUGGER_ROLE"):
                     min_nag_hours = f"{hours_limit:.1f}"
                     min_nag_hours = min_nag_hours.rstrip("0").rstrip(".")
-                    msg = (f"{role.mention} Need **"
-                           f"{self.num_more_needed} more puggers** "
-                           "for a game!\n_(This is an automatic ping "
-                           "to all puggers, because the PUG queue is "
-                           f"{(ping_ratio * 100):.0f}% full.\nRest "
-                           "assured, I will only ping you once per "
-                           f"{min_nag_hours} hours, at most.\n"
-                           "If you don't want any of these "
-                           "notifications, please consider "
-                           "temporarily muting this bot or leaving "
-                           f"the {role.mention} server role._)")
+                    msg = (
+                        f"{role.mention} Need **"
+                        f"{self.num_more_needed} more puggers** "
+                        "for a game!\n_(This is an automatic ping "
+                        "to all puggers, because the PUG queue is "
+                        f"{(ping_ratio * 100):.0f}% full.\nRest "
+                        "assured, I will only ping you once per "
+                        f"{min_nag_hours} hours, at most.\n"
+                        "If you don't want any of these "
+                        "notifications, please consider "
+                        "temporarily muting this bot or leaving "
+                        f"the {role.mention} server role._)"
+                    )
                     await self.guild_channel.send(msg)
                     break
