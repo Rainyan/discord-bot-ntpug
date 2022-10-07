@@ -88,13 +88,11 @@ class DbDriver(ABC):
 
            If there were no results, returns an empty list.
         """
-        pass
 
     @property
     @abstractmethod
     def bind_placeholder(self) -> str:
         """Returns the placeholder used for binding values in SQL queries."""
-        pass
 
 
 class Sqlite3(DbDriver):
