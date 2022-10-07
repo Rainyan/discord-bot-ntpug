@@ -85,8 +85,10 @@ SCRIPT_VERSION = "1.0.0"
 # INTENTS.presences = True  # for the queue status announces, etc.
 
 assert bot_instance.BOT is None
-bot_instance.BOT = commands.Bot(case_insensitive=True)#,
-                   #intents=INTENTS)
+bot_instance.BOT = commands.Bot(case_insensitive=True)
+# TODO: actually use the selected intents here
+# bot_instance.BOT = commands.Bot(case_insensitive=True,
+#                                 intents=INTENTS)
 assert bot_instance.BOT is not None
 
 
@@ -324,7 +326,6 @@ async def ping_puggers(ctx, message_to_other_players: discord.Option(str)):
     await ctx.respond(msg)
 
 
-
 class ErrorHandlerCog(commands.Cog):
     """Helper class for error handling.
     """
@@ -379,8 +380,9 @@ class PugQueueCog(commands.Cog):
                     if channel.name != PUG_CHANNEL_NAME:
                         continue
                     if guild not in pug_guilds:
-                        pug_guilds[guild] = pugstatus.PugStatus(guild_channel=channel,
-                                                      guild_roles=guild.roles)
+                        pug_guilds[guild] = pugstatus.PugStatus(
+                            guild_channel=channel,
+                            guild_roles=guild.roles)
                         await pug_guilds[guild].reload_puggers()
                     if pug_guilds[guild].is_full:
                         pug_start_success, msg = \
