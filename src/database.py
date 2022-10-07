@@ -12,7 +12,7 @@ from config import cfg
 
 class DbDriver(ABC):
     """Abstract DB driver base. All DB drivers should inherit from this."""
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *_args, **_kwargs):
         self.lock = asyncio.Lock()
         self.connection = None
         self.guild_id = None
