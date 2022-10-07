@@ -15,9 +15,9 @@ class DbDriver(ABC):
     def __init__(self, *args, **kwargs):
         self.lock = asyncio.Lock()
         self.connection = None
+        self.guild_id = None
         self.cursor = None
         self.table = None
-        self.guild_id = None
 
     def __del__(self):
         if hasattr(self, "connection"):
@@ -145,9 +145,9 @@ class Postgres(DbDriver):
 
 
 DB = None
-match cfg("NTBOT_DB_DRIVER"):
-    case "postgres":
-        DB = Postgres()
-    case "sqlite3":
-        DB = Sqlite3()
+driver = cfg("NTBOT_DB_DRIVER")
+if driver == "postgres":
+    DB = Postgres()
+elif driver == "sqlite3":
+    DB = Sqlite3()
 assert DB is not None
