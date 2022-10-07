@@ -78,11 +78,12 @@ assert discord.version_info.major == 2
 SCRIPT_NAME: Final[str] = "NT Pug Bot for Discord"
 SCRIPT_VERSION: Final[str] = "1.0.0"
 
-assert bot_instance.BOT is None
+# Construct the Discord bot object
 INTENTS = discord.Intents.none()
 INTENTS.guilds = True  # pylint: disable=assigning-non-slot
 INTENTS.guild_messages = True  # pylint: disable=assigning-non-slot
 INTENTS.message_content = True  # pylint: disable=assigning-non-slot
+assert bot_instance.BOT is None
 bot_instance.BOT = commands.Bot(case_insensitive=True, intents=INTENTS)
 assert bot_instance.BOT is not None
 
@@ -481,4 +482,13 @@ if cfg("NTBOT_DEBUG"):
         if enabled:
             print(f"* {intent}")
 
-bot_instance.BOT.run(BOT_SECRET_TOKEN)
+
+def main() -> None:
+    """Entry point"""
+    # Blocking call that abstracts the bot's main event loop.
+    assert bot_instance.BOT is not None
+    bot_instance.BOT.run(BOT_SECRET_TOKEN)
+
+
+if __name__ == "__main__":
+    main()
