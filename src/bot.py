@@ -98,7 +98,7 @@ async def on_message(msg):
         return
     cmds = ["!"+x for x in
             ("pug", "unpug", "puggers", "clearpuggers", "ping_puggers")]
-    if not msg.content in cmds:
+    if msg.content not in cmds:
         return
     # TODO: add the help page
     # TODO: refactor into a command group, "/pug join", "/pug leave" etc.
@@ -120,6 +120,7 @@ SECOND_TEAM_NAME = cfg("NTBOT_SECOND_TEAM_NAME")
 print(f"Now running {SCRIPT_NAME} v.{SCRIPT_VERSION}", flush=True)
 
 pug_guilds = {}
+
 
 @bot_instance.BOT.slash_command(brief="Test if bot is active")
 async def ping(ctx):
@@ -195,7 +196,8 @@ async def clearpuggers(ctx):
                                 ephemeral=cfg("NTBOT_EPHEMERAL_MESSAGES"))
 
 
-@bot_instance.BOT.slash_command(brief="Get new random teams suggestion for the latest PUG")
+@bot_instance.BOT.slash_command(brief="Get new random teams suggestion for "
+                                      "the latest PUG")
 async def scramble(ctx):
     """Player command for scrambling the latest full PUG queue.
        Can be called multiple times for generating new random teams.
@@ -224,7 +226,8 @@ async def scramble(ctx):
     await ctx.respond(msg)
 
 
-@bot_instance.BOT.slash_command(brief="List players currently queueing for PUG")
+@bot_instance.BOT.slash_command(brief="List players currently queueing for "
+                                      "PUG")
 async def puggers(ctx):
     """Player command for listing players currently in the PUG queue.
     """
@@ -260,7 +263,8 @@ async def is_pug_channel(ctx, respond=True):
 
 @commands.cooldown(rate=1, per=cfg("NTBOT_PING_PUGGERS_COOLDOWN_SECS"),
                    type=commands.BucketType.user)
-@bot_instance.BOT.slash_command(brief="Ping all players currently queueing for PUG")
+@bot_instance.BOT.slash_command(brief="Ping all players currently queueing "
+                                      "for PUG")
 # pylint: disable=no-member
 async def ping_puggers(ctx, message_to_other_players: discord.Option(str)):
     """Player command to ping all players currently inside the PUG queue.

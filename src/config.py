@@ -9,13 +9,13 @@ from ast import literal_eval
 import os
 import inspect
 
-
 from strictyaml import (as_document, load, Bool, EmptyList, Float, Int, Map,
                         Seq, Str)
 
+
 class PredicatedInt(Int):
     """StrictYAML Int validator, with optional predicates."""
-    def __init__(self, predicates = None):
+    def __init__(self, predicates=None):
         self.predicates = predicates if predicates is not None else []
 
     def validate_scalar(self, chunk):
@@ -59,6 +59,7 @@ assert os.path.isfile(CFG_PATH)
 with open(file=CFG_PATH, mode="r", encoding="utf-8") as f_config:
     CFG = load(f_config.read(), Map(YAML_CFG_SCHEMA))
 assert CFG is not None
+
 
 def cfg(key):
     """Returns a bot config value from environment variable or config file,

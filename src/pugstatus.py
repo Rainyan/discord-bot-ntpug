@@ -195,8 +195,8 @@ class PugStatus():
                 msg += f"{player.mention}, "
             msg = msg[:-2]  # trailing ", "
             msg += ("\n\nTeams unbalanced? Use **"
-                    f"{bot_instance.BOT.command_prefix}scramble** to suggest new "
-                    "random teams.")
+                    f"{bot_instance.BOT.command_prefix}scramble** to suggest "
+                    "new random teams.")
             return True, msg
 
     async def update_presence(self):
@@ -239,10 +239,9 @@ class PugStatus():
             presence["activity"] = activity
             presence["status"] = status
 
-            # BUG: should refactor the bot property hack to something that works
-            # as we can't access the method change_presence like this
-            await bot_instance.BOT.change_presence(activity=presence["activity"],
-                                      status=presence["status"])
+            await bot_instance.BOT.change_presence(
+                activity=presence["activity"],
+                status=presence["status"])
             self.last_presence = presence
             self.last_changed_presence = int(time.time())
 
@@ -256,8 +255,8 @@ class PugStatus():
             async for msg in self.guild_channel.history(limit=None,
                                                         after=after,
                                                         oldest_first=False).\
-                    filter(lambda msg: cfg("NTBOT_PUGGER_ROLE") in [role.name for role in
-                                                       msg.role_mentions]):
+                    filter(lambda msg: cfg("NTBOT_PUGGER_ROLE")
+                           in [role.name for role in msg.role_mentions]):
                 return datetime.now(timezone.utc) - msg.created_at
         except discord.errors.HTTPException as err:
             # If it's not a library error, and we got a HTTP 5xx response,

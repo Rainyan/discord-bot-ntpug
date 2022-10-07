@@ -71,7 +71,8 @@ class DbDriver(ABC):
             query += f" WHERE user_id = {self.bind_placeholder}"
             my_vars = (discord_id,)
         res = await self._execute(query, my_vars)
-        return [dict(zip(("db_row_id", "discord_id", "queued"), x)) for x in res]
+        return [dict(zip(("db_row_id", "discord_id", "queued"), x))
+                for x in res]
 
     async def set_discord_user(self, discord_id: int, is_queued: bool) -> None:
         """Set the DB queued state of a specific user by their Discord ID.
@@ -131,7 +132,8 @@ class Postgres(DbDriver):
             try:
                 res = self.cursor.fetchall()
             except psycopg2.ProgrammingError as err:
-                if str(err) == "no results to fetch":  # TODO: confirm this works
+                # TODO: confirm this works
+                if str(err) == "no results to fetch":
                     res = []
                 else:
                     raise err
