@@ -20,20 +20,20 @@ jobs:
       matrix:
         python-version: ["3.8", "3.9", "3.10"]
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
+        cache: pip
     - name: Install dependencies
       run: |
         echo Action path: $GITHUB_ACTION_PATH
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-        pip install pylint
-        pip install pycodestyle
+        pip install pycodestyle pylint
     - name: Analysing the code with pylint
       working-directory: ./src
       run: |
-        pylint `ls -R|grep .py$|xargs`
         pycodestyle `ls -R|grep .py$|xargs`
+        pylint `ls -R|grep .py$|xargs`
