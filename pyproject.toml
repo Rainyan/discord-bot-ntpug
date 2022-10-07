@@ -37,7 +37,7 @@ pycodestyle = "^2.9.1"
 black = "^22.10.0"
 
 [tool.poetry.scripts]
-pugbot = "pug:main"
+pugbot = "pug.bot:main"
 
 [build-system]
 requires = ["poetry-core"]

@@ -22,11 +22,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-import bot
-
-
-def main():
-    bot.main()
+from bot import main
 
 
 if __name__ == "__main__":
