@@ -12,7 +12,7 @@ from config import cfg
 
 class DbDriver(ABC):
     """Abstract DB driver base. All DB drivers should inherit from this."""
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         self.lock = asyncio.Lock()
         self.connection = None
         self.cursor = None
@@ -22,6 +22,19 @@ class DbDriver(ABC):
     def __del__(self):
         if hasattr(self, "connection"):
             self.connection.close()
+
+    def __call__(self, guild_id: int):
+        assert self.guild_id is None
+        assert guild_id > 0
+        self.guild_id = guild_id
+
+        assert self.table is None
+        self.table = f"{cfg('NTBOT_DB_TABLE')}_{guild_id}"
+
+        assert self.cursor is None
+        self.cursor = self.connection.cursor()
+
+        return self
 
     async def __aenter__(self):
         async with self.lock:
@@ -37,19 +50,6 @@ class DbDriver(ABC):
             self.connection.commit()
         return self
 
-    def __call__(self, guild_id: int):
-        assert self.guild_id is None
-        assert guild_id > 0
-        self.guild_id = guild_id
-
-        assert self.table is None
-        self.table = f"{cfg('NTBOT_DB_TABLE')}_{guild_id}"
-
-        assert self.cursor is None
-        self.cursor = self.connection.cursor()
-
-        return self
-
     async def __aexit__(self, exc_type, exc_value, traceback):
         async with self.lock:
             assert self.table is not None
@@ -59,7 +59,7 @@ class DbDriver(ABC):
             self.cursor = None
         return False
 
-    async def get_discord_user(self, discord_id=None):
+    async def get_discord_user(self, discord_id=None) -> list[dict]:
         """Get the DB data of a specific user by their Discord ID integer.
 
            If discord_id is None, gets all users.
@@ -73,7 +73,7 @@ class DbDriver(ABC):
         res = await self._execute(query, my_vars)
         return [dict(zip(("db_row_id", "discord_id", "queued"), x)) for x in res]
 
-    async def set_discord_user(self, discord_id: int, is_queued: bool):
+    async def set_discord_user(self, discord_id: int, is_queued: bool) -> None:
         """Set the DB queued state of a specific user by their Discord ID.
         """
         await self._execute(f"""INSERT INTO {self.table} (user_id) VALUES "
@@ -83,7 +83,11 @@ class DbDriver(ABC):
                             (discord_id, is_queued))
 
     @abstractmethod
-    async def _execute(self, query, my_vars=None):
+    async def _execute(self, query, my_vars=None) -> list:
+        """Returns a list of all fetched results of the query.
+
+           If there were no results, returns an empty list.
+        """
         pass
 
     @abstractmethod
@@ -94,9 +98,9 @@ class DbDriver(ABC):
 
 class Sqlite3(DbDriver):
     """DB driver for SQLite 3."""
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         assert cfg("NTBOT_DB_DRIVER") == "sqlite3"
-        super().__init__()
+        super().__init__(*args, **kwargs)
         self.connection = sqlite3.connect(database=cfg("NTBOT_DB_NAME"))
 
     async def _execute(self, query, my_vars=None):
@@ -113,9 +117,9 @@ class Sqlite3(DbDriver):
 
 class Postgres(DbDriver):
     """DB driver for Postgres."""
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         assert cfg("NTBOT_DB_DRIVER") == "postgres"
-        super().__init__()
+        super().__init__(*args, **kwargs)
         self.connection = psycopg2.connect(dbname=cfg("NTBOT_DB_NAME"),
                                            user=cfg("NTBOT_DB_USER"),
                                            password=cfg("NTBOT_DB_SECRET"),
