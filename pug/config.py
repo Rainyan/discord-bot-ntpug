@@ -8,7 +8,7 @@
 from ast import literal_eval
 import inspect
 import os
-from typing import Any, Callable, Dict, Final, Union
+from typing import Any, Callable, Dict, Final, Optional
 
 from strictyaml import (
     as_document,
@@ -28,7 +28,7 @@ class PredicatedInt(Int):
     """StrictYAML Int validator, with optional predicates."""
 
     def __init__(
-        self, predicates: Union[None, list[Callable[[int], bool]]] = None
+        self, predicates: Optional[list[Callable[[int], bool]]] = None
     ):
         self.predicates = predicates if predicates is not None else []
 
@@ -82,8 +82,8 @@ def cfg(key: str) -> Any:
     determined by the config values' StrictYAML schema.
     """
     assert isinstance(key, str)
-    value: Union[None, str] = os.environ.get(key)
-    if value is not None:
+    env_value: Final[Optional[str]] = os.environ.get(key)
+    if env_value is not None:
         expected_ret_type = YAML_CFG_SCHEMA[key]
         # Small placeholder schema used for validating just this type.
         # We don't want to use the main schema because then we'd need
@@ -92,7 +92,7 @@ def cfg(key: str) -> Any:
         mini_schema = {key: expected_ret_type}
         # Generate StrictYAML in-place, with the mini-schema to enforce
         # strict typing, and then return the queried key's value.
-        return as_document({key: literal_eval(value)}, Map(mini_schema))[
+        return as_document({key: literal_eval(env_value)}, Map(mini_schema))[
             key
         ].value
     return CFG[key].value

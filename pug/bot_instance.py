@@ -1,8 +1,9 @@
 """This module holds just the bot instance, to avoid circular imports.
 """
 
-from typing import Union
+from typing import Optional
 
 from discord.ext import commands
 
-BOT: Union[None, commands.Bot] = None
+
+BOT: Optional[commands.Bot] = None
