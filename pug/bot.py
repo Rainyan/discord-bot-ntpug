@@ -29,8 +29,7 @@ assert bot_instance.BOT is not None
 
 @bot_instance.BOT.event
 async def on_message(msg):
-    """Used to notify users of the ongoing migration to Discord slash commands
-    """
+    """Used to notify users of the ongoing migration to Discord slash commands"""
     command_prefix: Final[str] = "!"
     # Testing if message starts with the command prefix explicitly,
     # because it allows us to quickly ignore most chat messages,
@@ -94,26 +93,33 @@ async def ping(ctx):
 @bot_instance.BOT.slash_command(brief="Join the PUG queue")
 async def pug(ctx):
     """Player command for joining the PUG queue."""
-
     print("Trying new db method:")
     async with database.DB(ctx.guild.id) as driver:
-        res = await driver.get_discord_user(ctx.user.id)
-        print(res)
-    print("End of test")
-
-    if not await is_pug_channel(ctx):
-        return
-    response = ""
-    join_success, response = await pug_guilds[ctx.guild].player_join(ctx.user)
-    if join_success:
-        response = (
-            f"{ctx.user.name} has joined the PUG queue "
-            f"({pug_guilds[ctx.guild].num_queued} / "
-            f"{pug_guilds[ctx.guild].num_expected})"
-        )
-    await ctx.send_response(
-        content=response, ephemeral=cfg("NTBOT_EPHEMERAL_MESSAGES")
-    )
+        queued_players = await driver.get_discord_users()
+        if ctx.user.id in queued_players:
+            await ctx.send_response(
+                f"{ctx.user.mention} You are already queued! "
+                "If you wanted to un-PUG, please use "
+                "`/unpug` instead."
+            )
+            return
+        elif len(queued_players) >= cfg("NTBOT_PLAYERS_REQUIRED_TOTAL"):
+            await ctx.send_response(
+                f"{ctx.user.mention}Sorry, this PUG is currently full!"
+            )
+            return
+        await driver.set_discord_user(ctx.user.id, True)
+    if await is_pug_channel(ctx):
+        kwargs = {
+            "content": f"{ctx.user.mention} has joined the PUG queue (x / x)",
+            "ephemeral": False,
+        }
+    else:
+        kwargs = {
+            "content": "You have joined the PUG queue (x / x)",
+            "ephemeral": True,
+        }
+    await ctx.send_response(**kwargs)
 
 
 @bot_instance.BOT.slash_command(brief="Leave the PUG queue")
@@ -224,7 +230,7 @@ async def puggers(ctx):
     )
 
 
-async def is_pug_channel(ctx, respond=True):
+async def is_pug_channel(ctx, respond=False):
     """Returns whether the PUG bot should respond in this channel."""
     if ctx.guild not in pug_guilds or ctx.channel.name != PUG_CHANNEL_NAME:
         if respond:

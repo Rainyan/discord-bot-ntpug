@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 import asyncio
 import sqlite3
 from types import TracebackType
-from typing import Any, Union, Optional, Type, TypeVar
+from typing import Any, Union, Optional, Iterable, Type, TypeVar
 
 import psycopg2  # todo: make optional (setup.py)
 
@@ -75,10 +75,11 @@ class DbDriver(ABC):
             assert self.cursor is not None
             self.cursor.close()
             self.cursor = None
+            self.guild_id = None
         return False
 
-    async def get_discord_user(
-        self, discord_id: Optional[int] = None
+    async def get_discord_users(
+        self, discord_ids: Optional[Iterable[int]] = None
     ) -> list[dict[str, Union[int, bool]]]:
         """Get the DB data of a specific user by their Discord ID integer.
 
@@ -87,9 +88,12 @@ class DbDriver(ABC):
         """
         query = f"SELECT * FROM {self.table}"
         my_vars = None
-        if discord_id is not None:
-            query += f" WHERE user_id = {self.bind_placeholder}"
-            my_vars = (discord_id,)
+        if discord_ids is not None:
+            query += f" WHERE user_id IN ({', '.join([self.bind_placeholder for _ in discord_ids])})"
+            my_vars = tuple(discord_ids)
+        query += ";"
+        print(f"Query: '{query}'")
+        print(f"Vars: '{my_vars}'")
         res = await self._execute(query, my_vars)
         return [
             dict(zip(("db_row_id", "discord_id", "queued"), x)) for x in res
@@ -98,10 +102,10 @@ class DbDriver(ABC):
     async def set_discord_user(self, discord_id: int, is_queued: bool) -> None:
         """Set the DB queued state of a specific user by their Discord ID."""
         await self._execute(
-            f"""INSERT INTO {self.table} (user_id) VALUES "
-                            f"({self.bind_placeholder})
+            f"""INSERT INTO {self.table} (user_id) VALUES
+                            ({self.bind_placeholder})
                             ON CONFLICT (user_id) DO UPDATE SET is_queued =
-                            f"{self.bind_placeholder};""",
+                            {self.bind_placeholder};""",
             (discord_id, is_queued),
         )
 
@@ -130,7 +134,7 @@ class Sqlite3(DbDriver):
 
     async def _execute(self, query, my_vars=None):
         async with self.lock:
-            self.cursor.execute(query, my_vars)
+            self.cursor.execute(query, my_vars if my_vars is not None else ())
             res = self.cursor.fetchall()
             self.connection.commit()
         return res
