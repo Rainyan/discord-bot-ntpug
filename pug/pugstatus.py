@@ -43,8 +43,7 @@ class PugStatus:
         self.lock = asyncio.Lock()
 
     async def reset(self) -> None:
-        """Stores the previous puggers, and then resets current pugger queue.
-        """
+        """Stores the previous puggers, and then resets current pugger queue."""
         async with self.lock:
             self.prev_puggers = self.team1_players + self.team2_players
             self.team1_players.clear()

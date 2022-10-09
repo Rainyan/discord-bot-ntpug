@@ -17,6 +17,8 @@ DriverBase = TypeVar("DriverBase", bound="database.DbDriver")
 
 def test_dbdrivers_value(dbdrivers: str) -> None:
     if dbdrivers.casefold() != "all":
+        # Besides "all", all of the driver names we support for --dbdrivers
+        # config parameter.
         drivers = ("sqlite3", "postgres")
         assert all(
             [

@@ -97,7 +97,8 @@ class DbDriver(ABC):
             # TODO: refactor to return row names in a single row (instead of duplicating the key names),
             # so the value of the k-v pair is easier to consume by callers of this.
             # Could return a tuple of (keys, list[tuple(values)]), etc.
-            dict(zip(("db_row_id", "discord_id", "queued"), x)) for x in res
+            dict(zip(("db_row_id", "discord_id", "queued"), x))
+            for x in res
         ]
 
     async def set_discord_user(self, discord_id: int, is_queued: bool) -> None:
