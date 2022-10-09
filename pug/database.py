@@ -130,7 +130,9 @@ class Sqlite3(DbDriver):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.connection = sqlite3.connect(database=kwargs["database"])
+        self.connection = sqlite3.connect(
+            database=kwargs["database"].removesuffix(".sqlite3") + ".sqlite3"
+        )
 
     async def _execute(self, query, my_vars=None):
         async with self.lock:

@@ -1,5 +1,8 @@
 fly.toml
 
+# Local databases
+*.sqlite3
+
 # Vim
 *.swp
 
