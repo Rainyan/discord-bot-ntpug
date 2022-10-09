@@ -95,7 +95,7 @@ async def pug(ctx):
     """Player command for joining the PUG queue."""
     async with database.DB(ctx.guild.id) as driver:
         queued_players = await driver.get_discord_users()
-        if ctx.user.id in [x["discord_id"] for x in queued_players]:
+        if ctx.user.id in [x["discord_id"] for x in queued_players]:  # TODO: refactor this db return so we needn't do this comprehension
             await ctx.send_response(
                 f"{ctx.user.mention} You are already queued! "
                 "If you wanted to un-PUG, please use "
@@ -107,7 +107,6 @@ async def pug(ctx):
                 f"{ctx.user.mention}Sorry, this PUG is currently full!"
             )
             return
-        print(f"{ctx.user.id} was not included in: {queued_players}")
         await driver.set_discord_user(ctx.user.id, True)
     if await is_pug_channel(ctx):
         kwargs = {

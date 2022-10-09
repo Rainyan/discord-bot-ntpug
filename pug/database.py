@@ -94,6 +94,9 @@ class DbDriver(ABC):
         query += ";"
         res = await self._execute(query, my_vars)
         return [
+            # TODO: refactor to return row names in a single row (instead of duplicating the key names),
+            # so the value of the k-v pair is easier to consume by callers of this.
+            # Could return a tuple of (keys, list[tuple(values)]), etc.
             dict(zip(("db_row_id", "discord_id", "queued"), x)) for x in res
         ]
 
@@ -126,9 +129,8 @@ class Sqlite3(DbDriver):
     """DB driver for SQLite 3."""
 
     def __init__(self, *args, **kwargs):
-        assert cfg("NTBOT_DB_DRIVER") == "sqlite3"
         super().__init__(*args, **kwargs)
-        self.connection = sqlite3.connect(database=cfg("NTBOT_DB_NAME"))
+        self.connection = sqlite3.connect(database=kwargs["database"])
 
     async def _execute(self, query, my_vars=None):
         async with self.lock:
@@ -146,14 +148,14 @@ class Postgres(DbDriver):
     """DB driver for Postgres."""
 
     def __init__(self, *args, **kwargs):
-        assert cfg("NTBOT_DB_DRIVER") == "postgres"
         super().__init__(*args, **kwargs)
+        print(f"DBNAME IS: {kwargs['dbname']}")
         self.connection = psycopg2.connect(
-            dbname=cfg("NTBOT_DB_NAME"),
-            user=cfg("NTBOT_DB_USER"),
-            password=cfg("NTBOT_DB_SECRET"),
-            host=cfg("NTBOT_DB_HOST"),
-            port=cfg("NTBOT_DB_PORT"),
+            dbname=kwargs["dbname"],
+            user=kwargs["user"],
+            password=kwargs["password"],
+            host=kwargs["host"],
+            port=kwargs["port"],
         )
 
     async def _execute(self, query, my_vars=None):
@@ -178,7 +180,13 @@ class Postgres(DbDriver):
 DB: Union[None, DbDriver] = None
 driver = cfg("NTBOT_DB_DRIVER")
 if driver == "postgres":
-    DB = Postgres()
+    DB = Postgres(
+        dbname=cfg("NTBOT_DB_NAME"),
+        user=cfg("NTBOT_DB_USER"),
+        password=cfg("NTBOT_DB_SECRET"),
+        host=cfg("NTBOT_DB_HOST"),
+        port=cfg("NTBOT_DB_PORT"),
+    )
 elif driver == "sqlite3":
-    DB = Sqlite3()
+    DB = Sqlite3(database=cfg("NTBOT_DB_NAME"))
 assert DB is not None
