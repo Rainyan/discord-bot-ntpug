@@ -93,10 +93,9 @@ async def ping(ctx):
 @bot_instance.BOT.slash_command(brief="Join the PUG queue")
 async def pug(ctx):
     """Player command for joining the PUG queue."""
-    print("Trying new db method:")
     async with database.DB(ctx.guild.id) as driver:
         queued_players = await driver.get_discord_users()
-        if ctx.user.id in queued_players:
+        if ctx.user.id in [x["discord_id"] for x in queued_players]:
             await ctx.send_response(
                 f"{ctx.user.mention} You are already queued! "
                 "If you wanted to un-PUG, please use "
@@ -108,17 +107,22 @@ async def pug(ctx):
                 f"{ctx.user.mention}Sorry, this PUG is currently full!"
             )
             return
+        print(f"{ctx.user.id} was not included in: {queued_players}")
         await driver.set_discord_user(ctx.user.id, True)
     if await is_pug_channel(ctx):
         kwargs = {
-            "content": f"{ctx.user.mention} has joined the PUG queue (x / x)",
+            "content": f"{ctx.user.mention} has joined the PUG queue",
             "ephemeral": False,
         }
     else:
         kwargs = {
-            "content": "You have joined the PUG queue (x / x)",
+            "content": "You have joined the PUG queue",
             "ephemeral": True,
         }
+    kwargs["content"] += (
+        f" ({len(queued_players) + 1} / "
+        f"{cfg('NTBOT_PLAYERS_REQUIRED_TOTAL')})"
+    )
     await ctx.send_response(**kwargs)
 
 

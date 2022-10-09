@@ -92,8 +92,6 @@ class DbDriver(ABC):
             query += f" WHERE user_id IN ({', '.join([self.bind_placeholder for _ in discord_ids])})"
             my_vars = tuple(discord_ids)
         query += ";"
-        print(f"Query: '{query}'")
-        print(f"Vars: '{my_vars}'")
         res = await self._execute(query, my_vars)
         return [
             dict(zip(("db_row_id", "discord_id", "queued"), x)) for x in res
