@@ -6,15 +6,16 @@ authors = ["Rain <Rainyan@users.noreply.github.com>"]
 license = "MIT License"
 readme = "README.md"
 include = [
-    "cfg/config.yml",
+    "cfg/**/*",
     "Dockerfile",
     "LICENSE",
     "Procfile",
     "README.md",
     "runtime.txt",
-    "static/phrase_gen/adjectives.txt",
-    "static/phrase_gen/nouns.txt",
-    "static/phrase_gen/README.txt",
+    "static/**/*",
+]
+exclude = [
+    "tests/**/*",
 ]
 
 [tool.poetry.dependencies]
