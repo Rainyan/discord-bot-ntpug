@@ -50,9 +50,6 @@ class DbDriver(ABC):
             assert self.guild_id is not None
             assert self.connection is not None
             assert self.cursor is not None
-            # NOTE: Purges all DB data for debug.
-            if cfg("NTBOT_DEBUG"):
-                self.cursor.execute(f"DROP TABLE IF EXISTS {self.table};")
             self.cursor.execute(
                 f"""CREATE TABLE IF NOT EXISTS {self.table} (
                                 id serial PRIMARY KEY,
@@ -120,6 +117,10 @@ class DbDriver(ABC):
         If there were no results, returns an empty list.
         """
 
+    @abstractmethod
+    async def _drop_tables(self):
+        """Drops all of the tables in this DB's schema."""
+
     @property
     @abstractmethod
     def bind_placeholder(self) -> str:
@@ -141,6 +142,13 @@ class Sqlite3(DbDriver):
             res = self.cursor.fetchall()
             self.connection.commit()
         return res
+
+    async def _drop_tables(self):
+        print("Drop tables: sqlite3")
+        async with self.lock:
+            self.cursor.execute("""
+SELECT 'DROP TABLE ' || name || ';' from sqlite_master
+WHERE type = 'table';""")
 
     @property
     def bind_placeholder(self):
@@ -174,6 +182,21 @@ class Postgres(DbDriver):
                     raise err
             self.connection.commit()
         return res
+
+    async def _drop_tables(self):
+        print("Drop tables: sqlite3")
+        async with self.lock:
+            self.cursor.execute("""
+DO $$ DECLARE
+    tabname RECORD;
+BEGIN
+    FOR tabname IN (SELECT tablename
+                    FROM pg_tables
+                    WHERE schemaname = current_schema())
+LOOP
+    EXECUTE 'DROP TABLE IF EXISTS ' || quote_ident(tabname.tablename) || ' CASCADE';
+END LOOP;
+END $$;""")
 
     @property
     def bind_placeholder(self):

@@ -13,7 +13,9 @@ import database
 import pugstatus
 import bot_instance
 from util import random_human_readable_phrase
-import pug
+# Rename import because we have to define "pug" as function for the API,
+# which would clash with the import name.
+import pug as pugmodule
 
 assert discord.version_info.major == 2
 
@@ -77,8 +79,6 @@ assert len(PUGGER_ROLE) > 0
 FIRST_TEAM_NAME: Final[str] = cfg("NTBOT_FIRST_TEAM_NAME")
 SECOND_TEAM_NAME: Final[str] = cfg("NTBOT_SECOND_TEAM_NAME")
 
-print(f"Now running {pug.__title__} v.{pug.__version__}", flush=True)
-
 pug_guilds: Dict[discord.Guild, pugstatus.PugStatus] = {}
 
 
@@ -116,10 +116,13 @@ async def pug(ctx):
             "ephemeral": False,
         }
     else:
+        # If the user invoked this interaction on a non-PUG channel,
+        # respond ephemerally lest we interrupt the channel with offtopic.
         kwargs = {
             "content": "You have joined the PUG queue",
             "ephemeral": True,
         }
+    # Append current num. players queued status: "(x / y)"
     kwargs["content"] += (
         f" ({len(queued_players) + 1} / "
         f"{cfg('NTBOT_PLAYERS_REQUIRED_TOTAL')})"
@@ -435,6 +438,8 @@ if cfg("NTBOT_DEBUG"):
 
 def main() -> None:
     """Entry point"""
-    # Blocking call that abstracts the bot's main event loop.
+    print(f"Now running {pugmodule.__title__} v.{pugmodule.__version__}",
+          flush=True)
     assert bot_instance.BOT is not None
+    # Blocking call that abstracts the bot's main event loop.
     bot_instance.BOT.run(BOT_SECRET_TOKEN)
