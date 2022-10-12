@@ -146,9 +146,11 @@ class Sqlite3(DbDriver):
     async def _drop_tables(self):
         print("Drop tables: sqlite3")
         async with self.lock:
-            self.cursor.execute("""
+            self.cursor.execute(
+                """
 SELECT 'DROP TABLE ' || name || ';' from sqlite_master
-WHERE type = 'table';""")
+WHERE type = 'table';"""
+            )
 
     @property
     def bind_placeholder(self):
@@ -186,7 +188,8 @@ class Postgres(DbDriver):
     async def _drop_tables(self):
         print("Drop tables: sqlite3")
         async with self.lock:
-            self.cursor.execute("""
+            self.cursor.execute(
+                """
 DO $$ DECLARE
     tabname RECORD;
 BEGIN
@@ -196,7 +199,8 @@ BEGIN
 LOOP
     EXECUTE 'DROP TABLE IF EXISTS ' || quote_ident(tabname.tablename) || ' CASCADE';
 END LOOP;
-END $$;""")
+END $$;"""
+            )
 
     @property
     def bind_placeholder(self):

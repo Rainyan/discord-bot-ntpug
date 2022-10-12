@@ -13,6 +13,7 @@ import database
 import pugstatus
 import bot_instance
 from util import random_human_readable_phrase
+
 # Rename import because we have to define "pug" as function for the API,
 # which would clash with the import name.
 import pug as pugmodule
@@ -438,8 +439,10 @@ if cfg("NTBOT_DEBUG"):
 
 def main() -> None:
     """Entry point"""
-    print(f"Now running {pugmodule.__title__} v.{pugmodule.__version__}",
-          flush=True)
+    print(
+        f"Now running {pugmodule.__title__} v.{pugmodule.__version__}",
+        flush=True,
+    )
     assert bot_instance.BOT is not None
     # Blocking call that abstracts the bot's main event loop.
     bot_instance.BOT.run(BOT_SECRET_TOKEN)
