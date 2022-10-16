@@ -1,5 +1,6 @@
 # /usr/bin/env python3
 
+import asyncio
 import os
 import sys
 from typing import Union, Iterable, TypeVar
@@ -13,6 +14,13 @@ from pug import database
 
 
 DriverBase = TypeVar("DriverBase", bound="database.DbDriver")
+
+
+def event_loop():
+    policy = asyncio.get_event_loop_policy()
+    loop = policy.new_event_loop()
+    yield loop
+    loop.close()
 
 
 def test_dbdrivers_value(dbdrivers: str) -> None:

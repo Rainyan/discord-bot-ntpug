@@ -209,6 +209,7 @@ END $$;"""
 
 DB: Union[None, DbDriver] = None
 driver = cfg("NTBOT_DB_DRIVER")
+print(f"Driver: {driver}")
 if driver == "postgres":
     DB = Postgres(
         dbname=cfg("NTBOT_DB_NAME"),
