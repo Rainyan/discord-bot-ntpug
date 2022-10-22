@@ -32,14 +32,14 @@ class DbDriver(ABC):
             self.connection.close()
 
     def __call__(self: T, guild_id: int) -> T:
-        assert self.guild_id is None
+        #assert self.guild_id is None
         assert guild_id > 0
         self.guild_id = guild_id
 
-        assert self.table is None
+        #assert self.table is None
         self.table = f"{cfg('NTBOT_DB_TABLE')}_{guild_id}"
 
-        assert self.cursor is None
+        #assert self.cursor is None
         assert self.connection is not None
         self.cursor = self.connection.cursor()
 

@@ -43,11 +43,11 @@ class TestPostgres:
         ):
             pytest.skip(reason="Skipped by --dbdrivers")
         db = database.Postgres(
-            dbname=os.getenv("PYTEST_DB_DBNAME"),
-            user=os.getenv("PYTEST_DB_USER"),
-            password=os.getenv("PYTEST_DB_PASSWORD"),
-            host=os.getenv("PYTEST_DB_HOST"),
-            port=int(os.getenv("PYTEST_DB_PORT")),
+            dbname=os.getenv("NTBOT_DB_NAME"),
+            user=os.getenv("NTBOT_DB_USER"),
+            password=os.getenv("NTBOT_DB_PASSWORD"),
+            host=os.getenv("NTBOT_DB_HOST"),
+            port=int(os.getenv("NTBOT_DB_PORT")),
         )
         async with db(1) as driver:
             await db._drop_tables()
@@ -66,7 +66,7 @@ class TestSqlite3:
         ):
             pytest.skip(reason="Skipped by --dbdrivers")
 
-        db = database.Sqlite3(database=os.getenv("PYTEST_DB_DBNAME"))
+        db = database.Sqlite3(database=os.getenv("NTBOT_DB_NAME"))
         async with db(1) as driver:
             await db._drop_tables()
             res = await driver._execute(

@@ -92,7 +92,11 @@ def cfg(key: str) -> Any:
         mini_schema = {key: expected_ret_type}
         # Generate StrictYAML in-place, with the mini-schema to enforce
         # strict typing, and then return the queried key's value.
-        return as_document({key: literal_eval(env_value)}, Map(mini_schema))[
-            key
-        ].value
+        try:
+            return as_document({key: literal_eval(env_value)}, Map(mini_schema))[
+                key
+            ].value
+        except ValueError as err:
+            # print(f"Error'd with key {key}: {env_value}")
+            raise err
     return CFG[key].value

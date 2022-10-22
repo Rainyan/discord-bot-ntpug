@@ -14,20 +14,15 @@ from hypothesis.strategies import integers
 import pytest
 import pytest_asyncio
 
-from pug import bot
+from pug import bot, database
 
 
-# TODO: get fixture for raw DB calls to verify DB status
-# TODO: write our own async event loop instead of the Pycord abstraction
-#       so that we can use it here
-
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="session", autouse=True)
 def event_loop():
     policy = asyncio.get_event_loop_policy()
     loop = policy.new_event_loop()
     yield loop
     loop.close()
-
 
 
 @pytest.fixture
@@ -36,10 +31,8 @@ def guild_id():
 
 
 @pytest.fixture(scope="session")
-def context(session_mocker, guild_id=1, cmd_author_id=1):
+def context(session_mocker):
     context = session_mocker.AsyncMock()
-    #context.guild.id = guild_id
-    #context.user.id = cmd_author_id
     return context
 
 
@@ -55,13 +48,6 @@ async def test_pug_join(context, x):
      
 
     await bot.pug(context)
-
-
-#@pytest.mark.asyncio
-#async def test_pug_join(mocker) -> None:
-#    context = mocker.AsyncMock()
-#    context.guild.id = context.user.id = 1
-#    await bot.pug(context)
 
 
 #@pytest.mark.asyncio
