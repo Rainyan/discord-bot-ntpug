@@ -1,3 +1,8 @@
+Development stopped indefinitely due to lack of users. If someone wants to pick up this project, feel free to.
+Incomplete refactoring to pycord v2.x major release can be found in the the PR: https://github.com/Rainyan/discord-bot-ntpug/pull/112
+
+---
+
 [![MIT](https://img.shields.io/github/license/Rainyan/discord-bot-ntpug)](LICENSE)
 [![PEP8](https://img.shields.io/badge/code%20style-pep8-orange.svg)](https://www.python.org/dev/peps/pep-0008/)
 [![CodeQL](https://github.com/Rainyan/discord-bot-ntpug/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/Rainyan/discord-bot-ntpug/actions/workflows/codeql-analysis.yml)
