@@ -1,0 +1,61 @@
+[tool.poetry]
+name = "pug"
+version = "1.0.0"
+description = "PUG (pick-up game) bot for Discord."
+authors = ["Rain <Rainyan@users.noreply.github.com>"]
+license = "MIT License"
+readme = "README.md"
+include = [
+    "cfg/**/*",
+    "Dockerfile",
+    "LICENSE",
+    "Procfile",
+    "README.md",
+    "runtime.txt",
+    "static/**/*",
+]
+exclude = [
+    "tests/**/*",
+]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+aiodns = "3.0.0"
+aiohttp = "3.8.1"
+aiosignal = "1.2.0"
+async-timeout = "4.0.2"
+attrs = "22.1.0"
+brotlipy = "0.7.0"
+cchardet = "2.1.7"
+cffi = "1.15.1"
+charset-normalizer = "2.1.1"
+frozenlist = "1.3.1"
+idna = "3.3"
+multidict = "6.0.2"
+orjson = "3.8.0"
+pendulum = "2.1.2"
+psycopg2 = "2.9.3"
+py-cord = "2.1.3"
+pycares = "4.2.2"
+pycparser = "2.21"
+python-dateutil = "2.8.2"
+pytzdata = "2020.1"
+six = "1.16.0"
+strictyaml = "1.6.1"
+yarl = "1.8.1"
+
+[tool.poetry.group.dev.dependencies]
+pylint = "^2.15.3"
+pycodestyle = "^2.9.1"
+black = "^22.10.0"
+
+[tool.poetry.scripts]
+pugbot = "pug.bot:main"
+
+[tool.black]
+line-length = 79
+target-version = ['py38', 'py39', 'py310']
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

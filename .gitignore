@@ -1,5 +1,11 @@
 fly.toml
 
+# Local test configs
+pytest.ini
+
+# Local databases
+*.sqlite3
+
 # Vim
 *.swp
 

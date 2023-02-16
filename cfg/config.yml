@@ -15,9 +15,6 @@
 # For info on how to generate this token, please see: https://discord.com/developers/docs
 NTBOT_SECRET_TOKEN: ""
 
-# The first character of bot commands, for example "!" for "!pug".
-NTBOT_CMD_PREFIX: "!"
-
 # Name of the Discord server channel that the bot listens to.
 # This value has to be an exact match of the channel name.
 NTBOT_PUG_CHANNEL: pug-queue
@@ -26,9 +23,9 @@ NTBOT_PUG_CHANNEL: pug-queue
 # For example, 10 for a 5v5. Needs to be an even number.
 NTBOT_PLAYERS_REQUIRED_TOTAL: 10
 
-# Debug command. Whether to allow the same player to repeatedly queue to fill up >1 slots,
-# for bot testing purposes. This should not be normally enabled.
-NTBOT_DEBUG_ALLOW_REQUEUE: False
+# Allow various debug modes. This should always be set to False, 
+# unless you are writing code for this project and know you need to edit this.
+NTBOT_DEBUG: False
 
 # How often (in seconds) to check if there's enough players pugged up to start
 # playing.
@@ -56,8 +53,8 @@ NTBOT_PUG_ADMIN_ROLES:
     - Moderators
 
 # How long to keep idle puggers in the queue before automatically un-queueing them,
-# in full hours. Has to be a positive integer.
-NTBOT_IDLE_THRESHOLD_HOURS: 16
+# in full hours. Has to be a positive floating point value.
+NTBOT_IDLE_THRESHOLD_HOURS: 12.0
 
 # How often can PUG queuers bulk-ping all the other players currently in the queue, in seconds.
 # Admins with role(s) defined by "NTBOT_PUG_ADMIN_ROLES" are not affected by this time limit.
@@ -66,3 +63,15 @@ NTBOT_PING_PUGGERS_COOLDOWN_SECS: 600.0
 # Names of each team
 NTBOT_FIRST_TEAM_NAME: Jinrai
 NTBOT_SECOND_TEAM_NAME: NSF
+
+# If set to False, will publicly announce people joining and leaving the PUG queue etc,
+# even if they use Discord's "silent" slash commands.
+NTBOT_EPHEMERAL_MESSAGES: True
+
+NTBOT_DB_DRIVER: "sqlite3"
+NTBOT_DB_USER: "postgres"
+NTBOT_DB_NAME: "postgres"
+NTBOT_DB_SECRET: ""
+NTBOT_DB_TABLE: "puggers"
+NTBOT_DB_HOST: "localhost"
+NTBOT_DB_PORT: 5432

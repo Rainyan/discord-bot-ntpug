@@ -32,4 +32,4 @@ kill_timeout = 5
   auto_rollback = true
 
 [processes]
-  worker = "python bot.py"
+  worker = "python -m pug"
